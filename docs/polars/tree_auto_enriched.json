@@ -1,0 +1,2128 @@
+{
+  "version": "0.1.0",
+  "nodes": [
+    {
+      "id": "polars_alias",
+      "title": "pl.Expr.alias(self, name: 'str_') -> 'Expr'",
+      "definition": "Rename the expression.",
+      "key_facts": [
+        "Signature: polars.Expr.alias(self, name: 'str_') -> 'Expr'",
+        "Parameters:\nname\n    The new name."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.alias",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [1, 2, 3],\n\"b\": [\"x\", \"y\", \"z\"],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.alias."
+        },
+        {
+          "problem": "Example usage of polars.Expr.alias",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\npl.col(\"a\") + 10,\npl.col(\"b\").str.to_uppercase().alias(\"c\"),\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.alias."
+        },
+        {
+          "problem": "Example usage of polars.Expr.alias",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\npl.lit(True).alias(\"c\"),\npl.lit(4.0).alias(\"d\"),\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.alias."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT skip calling .alias() when adding multiple computed columns derived from the same source column — Polars will raise a duplicate column name error. For example, df.with_columns(pl.col('a') * 2, pl.col('a') + 10) will fail because both expressions inherit the name 'a'. Always use .alias() to give each a unique name.",
+        "DO NOT use pandas-style column renaming via dict mapping inside with_columns() or select(). In Polars 1.0+, renaming must be done explicitly with .alias() (or name.map/prefix/suffix). Attempting df.with_columns({'a': pl.col('a') * 2}) will not work as expected and may raise an error or be silently ignored."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.alias",
+        "qualified_name": "polars.Expr.alias",
+        "polars_version": "1.40.1",
+        "signature": "(self, name: 'str_') -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_cast",
+      "title": "pl.Expr.cast(self, dtype: 'PolarsDataType | pl.DataTypeExpr | ...",
+      "definition": "Cast between data types.",
+      "key_facts": [
+        "Signature: polars.Expr.cast(self, dtype: 'PolarsDataType | pl.DataTypeExpr | type[Any]', *, strict: 'bool' = True, wrap_numerical: 'bool' = False) -> 'Expr'",
+        "Parameters:\ndtype\n    DataType to cast to.\nstrict\n    Raise if cast is invalid on rows after predicates are pushed down.\n    If `False`, invalid casts will produce null values.\nwrap_numerical\n    If True numeric casts wrap overflowing values instead of\n    marking the cast as invalid."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.cast",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [1, 2, 3],\n\"b\": [\"4\", \"5\", \"6\"],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.cast."
+        },
+        {
+          "problem": "Example usage of polars.Expr.cast",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\npl.col(\"a\").cast(pl.Float64),\npl.col(\"b\").cast(pl.Int32),\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.cast."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT rely on strict=True (default) when casting columns that may contain nulls or out-of-range values — it will raise a ComputeError at runtime. Use strict=False to safely convert invalid values to null instead of crashing, e.g., pl.col('a').cast(pl.Int32, strict=False).",
+        "DO NOT use wrap_numerical=True expecting Python-style arbitrary precision overflow handling — it silently wraps values using C-style integer overflow (e.g., casting 128 to Int8 with wrap_numerical=True yields -128), which can silently corrupt data if you are unaware of the modular arithmetic behavior."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.cast",
+        "qualified_name": "polars.Expr.cast",
+        "polars_version": "1.40.1",
+        "signature": "(self, dtype: 'PolarsDataType | pl.DataTypeExpr | type[Any]', *, strict: 'bool' = True, wrap_numerical: 'bool' = False) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_col",
+      "title": "pl.col(...)",
+      "definition": "Create Polars column expressions.",
+      "key_facts": [
+        "Signature: polars.col(...)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.col",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "from polars import col",
+          "key_insight": "Standard usage pattern for polars.col."
+        },
+        {
+          "problem": "Example usage of polars.col",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"foo\": [1, 2],\n\"bar\": [3, 4],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.col."
+        },
+        {
+          "problem": "Example usage of polars.col",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(baz=(col(\"foo\") * col(\"bar\")) / 2)",
+          "key_insight": "Standard usage pattern for polars.col."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pandas-style df['col_name'] inside Polars expressions/lazy contexts — use pl.col('col_name') instead. Using bracket indexing eagerly materializes data and breaks the lazy query optimizer, e.g., avoid `df.filter(df['age'] > 30)` and instead use `df.filter(pl.col('age') > 30)`.",
+        "DO NOT rely on the attribute shorthand `pl.col.foo` in production code or when column names contain spaces, special characters, or clash with built-in Python/Polars attributes (e.g., a column named 'schema' or 'dtypes' will silently resolve to the DataFrame attribute instead of a column expression). Always prefer the explicit `pl.col('foo')` call syntax."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "pl.col",
+        "qualified_name": "polars.col",
+        "polars_version": "1.40.1",
+        "signature": "(...)",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_concat",
+      "title": "pl.concat(items: 'Iterable[PolarsType]', *, how: 'ConcatMet...",
+      "definition": "Combine multiple DataFrames, LazyFrames, or Series into a single object.",
+      "key_facts": [
+        "Signature: polars.concat(items: 'Iterable[PolarsType]', *, how: 'ConcatMethod' = 'vertical', rechunk: 'bool' = False, parallel: 'bool' = True, strict: 'bool' = False) -> 'PolarsType'",
+        "Parameters:\nitems\n    DataFrames, LazyFrames, or Series to concatenate.\nhow : {'vertical', 'vertical_relaxed', 'diagonal', 'diagonal_relaxed', 'horizontal', 'align', 'align_full', 'align_inner', 'align_left', 'align_right'}\n    Note that `Series` only support the `vertical` strategy.\n\n    * vertical: Applies multiple `vstack` operations.\n    * vertical_relaxed: Same as `vertical`, but additionally coerces columns to\n      their common supertype *if* they are mismatched (eg: Int32 → Int64).\n    * diagonal: F"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.concat",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df1 = pl.DataFrame({\"a\": [1], \"b\": [3]})",
+          "key_insight": "Standard usage pattern for polars.concat."
+        },
+        {
+          "problem": "Example usage of polars.concat",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df2 = pl.DataFrame({\"a\": [2], \"b\": [4]})",
+          "key_insight": "Standard usage pattern for polars.concat."
+        },
+        {
+          "problem": "Example usage of polars.concat",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "pl.concat([df1, df2])  # defau\n(truncated)",
+          "key_insight": "Standard usage pattern for polars.concat."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT assume 'vertical' (default) will handle DataFrames with mismatched column types or different schemas — it will raise a SchemaError. Use 'vertical_relaxed' to automatically upcast mismatched but compatible dtypes (e.g., Int32 + Int64 → Int64), or 'diagonal'/'diagonal_relaxed' when columns differ between frames.",
+        "DO NOT use pandas-style pd.concat() mental model where missing columns are silently filled with NaN by default — in Polars, the default 'vertical' how requires identical schemas. You must explicitly opt into 'diagonal' or 'diagonal_relaxed' to get null-filling behavior for missing columns across DataFrames."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "pl.concat",
+        "qualified_name": "polars.concat",
+        "polars_version": "1.40.1",
+        "signature": "(items: 'Iterable[PolarsType]', *, how: 'ConcatMethod' = 'vertical', rechunk: 'bool' = False, parallel: 'bool' = True, strict: 'bool' = False) -> 'PolarsType'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_cum_sum",
+      "title": "pl.Expr.cum_sum(self, *, reverse: 'bool' = False) -> 'Expr'",
+      "definition": "Get an array with the cumulative sum computed at every element.",
+      "key_facts": [
+        "Signature: polars.Expr.cum_sum(self, *, reverse: 'bool' = False) -> 'Expr'",
+        "Parameters:\nreverse\n    Reverse the operation."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.cum_sum",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"a\": [1, 2, 3, 4]})",
+          "key_insight": "Standard usage pattern for polars.Expr.cum_sum."
+        },
+        {
+          "problem": "Example usage of polars.Expr.cum_sum",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\npl.col(\"a\").cum_sum().alias(\"cum_sum\"),\npl.col(\"a\").cum_sum(reverse=True).alias(\"cum_sum_reverse\"),\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.cum_sum."
+        },
+        {
+          "problem": "Example usage of polars.Expr.cum_sum",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"values\": [None, 10, None, 8, 9, None, 16, None]})",
+          "key_insight": "Standard usage pattern for polars.Expr.cum_sum."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use the Polars 0.x name (without underscore). Use cum_sum (Polars 1.0+ snake_case).",
+        "DO NOT use pandas-style df['a'].cumsum() — Polars requires the expression API: pl.col('a').cum_sum(). The pandas method name and calling convention are both incompatible.",
+        "BE AWARE that null values in the column propagate through cum_sum, meaning any null encountered will cause all subsequent cumulative values to also be null unless you first fill nulls with pl.col('a').fill_null(0).cum_sum()."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.cum_sum",
+        "qualified_name": "polars.Expr.cum_sum",
+        "polars_version": "1.40.1",
+        "signature": "(self, *, reverse: 'bool' = False) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_explode",
+      "title": "pl.DataFrame.explode(self, columns: 'ColumnNameOrSelector | Iterable[C...",
+      "definition": "Explode the dataframe to long format by exploding the given columns.",
+      "key_facts": [
+        "Signature: polars.DataFrame.explode(self, columns: 'ColumnNameOrSelector | Iterable[ColumnNameOrSelector]', *more_columns: 'ColumnNameOrSelector', empty_as_null: 'bool' = True, keep_nulls: 'bool' = True) -> 'DataFrame'",
+        "Parameters:\ncolumns\n    Column names, expressions, or a selector defining them. The underlying\n    columns being exploded must be of the `List` or `Array` data type.\n*more_columns\n    Additional names of columns to explode, specified as positional arguments.\nempty_as_null\n    Explode an empty list/array into a `null`.\nkeep_nulls\n    Explode a `null` list/array into a `null`.",
+        "Returns: DataFrame"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.DataFrame.explode",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"letters\": [\"a\", \"a\", \"b\", \"c\"],\n\"numbers\": [[1], [2, 3], [4, 5], [6, 7, 8]],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.explode."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.explode",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df",
+          "key_insight": "Standard usage pattern for polars.DataFrame.explode."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.explode",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.explode(\"numbers\")",
+          "key_insight": "Standard usage pattern for polars.DataFrame.explode."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT attempt to explode non-List/Array columns (e.g., a plain str or i64 column) — Polars will raise an InvalidOperationError. Unlike pandas where you might accidentally call explode on a string column and get character-level splits, Polars strictly requires the column dtype to be List or Array before exploding.",
+        "DO NOT forget that exploding multiple list columns simultaneously requires all those list columns to have the same list lengths per row. If the lists in different columns have mismatched lengths for the same row, Polars will raise a ShapeError. This is a common pitfall when coming from pandas where explode only operates on one column at a time."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.explode",
+        "qualified_name": "polars.DataFrame.explode",
+        "polars_version": "1.40.1",
+        "signature": "(self, columns: 'ColumnNameOrSelector | Iterable[ColumnNameOrSelector]', *more_columns: 'ColumnNameOrSelector', empty_as_null: 'bool' = True, keep_nulls: 'bool' = True) -> 'DataFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_filter",
+      "title": "pl.DataFrame.filter(self, *predicates: 'IntoExprColumn | Iterable[Int...",
+      "definition": "Filter rows, retaining those that match the given predicate expression(s).\n\nThe original order of the remaining rows is preserved.\n\nOnly rows where the predicate resolves as True are retained; when the\npredicate result is False (or null), the row is discarded.",
+      "key_facts": [
+        "Signature: polars.DataFrame.filter(self, *predicates: 'IntoExprColumn | Iterable[IntoExprColumn] | bool | list[bool] | np.ndarray[Any, Any]', **constraints: 'Any') -> 'DataFrame'",
+        "Parameters:\npredicates\n    Expression(s) that evaluate to a boolean Series.\nconstraints\n    Column filters; use `name = value` to filter columns by the supplied value.\n    Each constraint will behave the same as `pl.col(name).eq(value)`, and\n    be implicitly joined with the other filter conditions using `&`."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.DataFrame.filter",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"foo\": [1, 2, 3, None, 4, None, 0],\n\"bar\": [6, 7, 8, None, None, 9, 0],\n\"ham\": [\"a\", \"b\", \"c\", None, \"d\", \"e\", \"f\"],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.filter."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.filter",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.filter(pl.col(\"foo\") > 1)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.filter."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.filter",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.filter(\n(pl.col(\"foo\") < 3) & (pl.col(\"ham\") == \"a\"),\n)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.filter."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pandas-style boolean indexing (e.g., df[df['col'] > 5]). In Polars, you must use df.filter(pl.col('col') > 5). Using bracket-based boolean indexing will either raise an error or produce unexpected behavior.",
+        "DO NOT assume that comparisons involving null values will behave like Python/Pandas None checks. In Polars, any comparison with a null (e.g., pl.col('a') == None or pl.col('a') > 5 when 'a' is null) resolves to null (not True or False), causing those rows to be silently dropped. Use pl.col('a').is_null() or pl.col('a').is_not_null() to explicitly handle nulls."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.filter",
+        "qualified_name": "polars.DataFrame.filter",
+        "polars_version": "1.40.1",
+        "signature": "(self, *predicates: 'IntoExprColumn | Iterable[IntoExprColumn] | bool | list[bool] | np.ndarray[Any, Any]', **constraints: 'Any') -> 'DataFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_group_by",
+      "title": "pl.DataFrame.group_by(self, *by: 'IntoExpr | Iterable[IntoExpr]', maint...",
+      "definition": "Start a group by operation.",
+      "key_facts": [
+        "Signature: polars.DataFrame.group_by(self, *by: 'IntoExpr | Iterable[IntoExpr]', maintain_order: 'bool' = False, **named_by: 'IntoExpr') -> 'GroupBy'",
+        "Parameters:\n*by\n    Column(s) to group by. Accepts expression input. Strings are parsed as\n    column names.\nmaintain_order\n    Ensure that the order of the groups is consistent with the input data.\n    This is slower than a default group by.\n    Settings this to `True` blocks the possibility\n    to run on the streaming engine.\n\n    .. note::\n        Within each group, the order of rows is always preserved, regardless\n        of this argument.\n**named_by\n    Additional columns to group by, specified as keyw",
+        "Returns: GroupBy\n    Object which can be used to perform aggregations."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.DataFrame.group_by",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [\"a\", \"b\", \"a\", \"b\", \"c\"],\n\"b\": [1, 2, 1, 3, 3],\n\"c\": [5, 4, 3, 2, 1],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.group_by."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.group_by",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.group_by(\"a\").agg(pl.col(\"b\").sum())  # doctest: +IGNORE_RESULT",
+          "key_insight": "Standard usage pattern for polars.DataFrame.group_by."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.group_by",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.group_by(\"a\", maintain_order=True).agg(pl.col(\"c\"))",
+          "key_insight": "Standard usage pattern for polars.DataFrame.group_by."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT assume group order is deterministic without setting `maintain_order=True`. By default, Polars uses a hash-based grouping that produces non-deterministic group ordering across runs, unlike pandas `groupby` which preserves insertion order. If your downstream logic depends on group order, always pass `maintain_order=True`.",
+        "DO NOT chain `.group_by()` directly with row-level operations like `.apply()` or expect a single-pass result — `group_by()` returns a `GroupBy` object, not a DataFrame. You must follow it with an aggregation method like `.agg()`, `.mean()`, `.sum()`, etc., otherwise you will get a `GroupBy` object and not the data you expect."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.group_by",
+        "qualified_name": "polars.DataFrame.group_by",
+        "polars_version": "1.40.1",
+        "signature": "(self, *by: 'IntoExpr | Iterable[IntoExpr]', maintain_order: 'bool' = False, **named_by: 'IntoExpr') -> 'GroupBy'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_group_by_dynamic",
+      "title": "pl.DataFrame.group_by_dynamic(self, index_column: 'IntoExpr', *, every: 'str | ...",
+      "definition": "Group based on a time value (or index value of type Int32, Int64).\n\nTime windows are calculated and rows are assigned to windows. Different from a\nnormal group by is that a row can be member of multiple groups.\nBy default, the windows look like:\n\n- [start, start + period)\n- [start + every, start + every + period)\n- [start + 2*every, start + 2*every + period)\n- ...\n\nwhere `start` is determined by `start_by`, `offset`, `every`, and the earliest\ndatapoint. See the `start_by` argument description for details.\n\n.. warning::\n    The index column must be sorted in ascending order. If `group_by` is passed, then\n    the index column must be sorted in ascending order within each group.\n\n.. versionchanged:: 0.20.14\n    The `by` parameter was renamed `group_by`.",
+      "key_facts": [
+        "Signature: polars.DataFrame.group_by_dynamic(self, index_column: 'IntoExpr', *, every: 'str | timedelta', period: 'str | timedelta | None' = None, offset: 'str | timedelta | None' = None, include_boundaries: 'bool' = False, closed: 'ClosedInterval' = 'left', label: 'Label' = 'left', group_by: 'IntoExpr | Iterable[IntoExpr] | None' = None, start_by: 'StartBy' = 'window') -> 'DynamicGroupBy'",
+        "Parameters:\nindex_column\n    Column used to group based on the time window.\n    Often of type Date/Datetime.\n    This column must be sorted in ascending order (or, if `group_by` is specified,\n    then it must be sorted in ascending order within each group).\n\n    In case of a dynamic group by on indices, dtype needs to be one of\n    {Int32, Int64}. Note that Int32 gets temporarily cast to Int64, so if\n    performance matters use an Int64 column.\nevery\n    interval of the window\nperiod\n    length of the windo"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.DataFrame.group_by_dynamic",
+          "solution_steps": [
+            "Call polars.DataFrame.group_by_dynamic(self, index_column: 'IntoExpr', *, every: 'str | timedelta', period: 'str | timedelta | None' = None, offset: 'str | timedelta | None' = None, include_boundaries: 'bool' = False, closed: 'ClosedInterval' = 'left', label: 'Label' = 'left', group_by: 'IntoExpr | Iterable[IntoExpr] | None' = None, start_by: 'StartBy' = 'window') -> 'DynamicGroupBy'"
+          ],
+          "final_answer": "# See signature: polars.DataFrame.group_by_dynamic(self, index_column: 'IntoExpr', *, every: 'str | timedelta', period: 'str | timedelta | None' = Non",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "Given a DataFrame of sales transactions with a 'timestamp' (Datetime) column and a 'revenue' (Float64) column, compute the total revenue in rolling 2-hour windows that advance every 1 hour, also broken out by 'region'.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\nfrom datetime import datetime\n\ndf = pl.DataFrame({\n    'timestamp': [\n        datetime(2024, 1, 1, 0, 30),\n        datetime(2024, 1, 1, 1, 15),\n        datetime(2024, 1, 1, 1, 45),\n        datetime(2024, 1, 1, 2, 30),\n        datetime(2024, 1, 1, 3, 10),\n        datetime(2024, 1, 1, 0, 45),\n        datetime(2024, 1, 1, 2, 0),\n    ],\n    'revenue': [100.0, 200.0, 150.0, 300.0, 250.0, 80.0, 120.0],\n    'region': ['East', 'East', 'East', 'East', 'East', 'West', 'West'],\n}).sort(['region', 'timestamp'])\n\nresult = (\n    df.group_by_dynamic(\n        'timestamp',\n        every='1h',\n        period='2h',\n        closed='left',\n        label='left',\n        group_by='region',\n    )\n    .agg(pl.col('revenue').sum().alias('total_revenue'))\n    .sort(['region', 'timestamp'])\n)\nprint(result)\n# Each window covers 2 hours but starts every 1 hour, so transactions\n# near a boundary appear in two consecutive windows.",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT pass an unsorted index column — group_by_dynamic silently produces incorrect or incomplete windows if the index column is not sorted in ascending order (use .sort('timestamp') before calling group_by_dynamic, and within each group when using the group_by parameter).",
+        "DO NOT confuse `every` with `period`: `every` controls how far apart window *start points* are, while `period` controls how *wide* each window is. Leaving `period` as None makes it equal to `every`, giving non-overlapping windows. Setting `period` larger than `every` creates overlapping windows where a single row can belong to multiple groups — this is unlike a standard group_by and catches many users off guard."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.group_by_dynamic",
+        "qualified_name": "polars.DataFrame.group_by_dynamic",
+        "polars_version": "1.40.1",
+        "signature": "(self, index_column: 'IntoExpr', *, every: 'str | timedelta', period: 'str | timedelta | None' = None, offset: 'str | timedelta | None' = None, include_boundaries: 'bool' = False, closed: 'ClosedInterval' = 'left', label: 'Label' = 'left', group_by: 'IntoExpr | Iterable[IntoExpr] | None' = None, start_by: 'StartBy' = 'window') -> 'DynamicGroupBy'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_join",
+      "title": "pl.DataFrame.join(self, other: 'DataFrame', on: 'str | Expr | Seque...",
+      "definition": "Join in SQL-like fashion.\n\n.. versionchanged:: 1.24\n    The `join_nulls` parameter was renamed `nulls_equal`.",
+      "key_facts": [
+        "Signature: polars.DataFrame.join(self, other: 'DataFrame', on: 'str | Expr | Sequence[str | Expr] | None' = None, how: 'JoinStrategy' = 'inner', *, left_on: 'str | Expr | Sequence[str | Expr] | None' = None, right_on: 'str | Expr | Sequence[str | Expr] | None' = None, suffix: 'str' = '_right', validate: 'JoinValidation' = 'm:m', nulls_equal: 'bool' = False, coalesce: 'bool | None' = None, maintain_order: 'MaintainOrderJoin | None' = None) -> 'DataFrame'",
+        "Parameters:\nother\n    DataFrame to join with.\non\n    Name(s) of the join columns in both DataFrames. If set, `left_on` and\n    `right_on` should be None. This should not be specified if `how='cross'`.\nhow : {'inner', 'left', 'right', 'full', 'semi', 'anti', 'cross'}\n    Join strategy.\n\n    .. list-table ::\n       :header-rows: 0\n\n       * - **inner**\n         - *(Default)* Returns rows that have matching values in both tables.\n       * - **left**\n         - Returns all rows from the left table, and the matc"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.DataFrame.join",
+          "solution_steps": [
+            "Call polars.DataFrame.join(self, other: 'DataFrame', on: 'str | Expr | Sequence[str | Expr] | None' = None, how: 'JoinStrategy' = 'inner', *, left_on: 'str | Expr | Sequence[str | Expr] | None' = None, right_on: 'str | Expr | Sequence[str | Expr] | None' = None, suffix: 'str' = '_right', validate: 'JoinValidation' = 'm:m', nulls_equal: 'bool' = False, coalesce: 'bool | None' = None, maintain_order: 'MaintainOrderJoin | None' = None) -> 'DataFrame'"
+          ],
+          "final_answer": "# See signature: polars.DataFrame.join(self, other: 'DataFrame', on: 'str | Expr | Sequence[str | Expr] | None' = None, how: 'JoinStrategy",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "Given a DataFrame of orders and a DataFrame of customers, perform a left join to retain all orders even if no matching customer exists, using different key column names ('customer_id' in orders vs 'id' in customers), and tag the source of unmatched rows.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\n\norders = pl.DataFrame({\n    'order_id': [1, 2, 3, 4],\n    'customer_id': [101, 102, 999, 101],\n    'amount': [250, 150, 300, 90]\n})\n\ncustomers = pl.DataFrame({\n    'id': [101, 102, 103],\n    'name': ['Alice', 'Bob', 'Charlie']\n})\n\nresult = (\n    orders.join(\n        customers,\n        left_on='customer_id',\n        right_on='id',\n        how='left'\n    )\n    .with_columns(\n        pl.col('name').fill_null('Unknown').alias('customer_name')\n    )\n    .drop('name')\n)\n\nprint(result)\n# shape: (4, 4)\n# ┌──────────┬─────────────┬────────┬───────────────┐\n# │ order_id ┆ customer_id ┆ amount ┆ customer_name │\n# │ ---      ┆ ---         ┆ ---    ┆ ---           │\n# │ i64      ┆ i64         ┆ i64    ┆ str           │\n# ╞══════════╪═════════════╪════════╪═══════════════╡\n# │ 1        ┆ 101         ┆ 250    ┆ Alice         │\n# │ 2        ┆ 102         ┆ 150    ┆ Bob           │\n# │ 3        ┆ 999         ┆ 300    ┆ Unknown       │\n# │ 4        ┆ 101         ┆ 90     ┆ Alice         │\n# └──────────┴─────────────┴────────┴───────────────┘",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT assume null keys will match each other by default. Unlike some SQL dialects, Polars sets `nulls_equal=False` by default, meaning rows where the join key is null will NOT match even if both sides have null — you must explicitly set `nulls_equal=True` to treat nulls as equal join keys.",
+        "DO NOT use pandas-style `df.merge(other, left_on='a', right_on='b', suffixes=('', '_right'))` — in Polars the suffix parameter only applies to the RIGHT side columns and is a single string (`suffix='_right'`), not a tuple. Using a tuple will raise a TypeError."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.join",
+        "qualified_name": "polars.DataFrame.join",
+        "polars_version": "1.40.1",
+        "signature": "(self, other: 'DataFrame', on: 'str | Expr | Sequence[str | Expr] | None' = None, how: 'JoinStrategy' = 'inner', *, left_on: 'str | Expr | Sequence[str | Expr] | None' = None, right_on: 'str | Expr | Sequence[str | Expr] | None' = None, suffix: 'str' = '_right', validate: 'JoinValidation' = 'm:m', nulls_equal: 'bool' = False, coalesce: 'bool | None' = None, maintain_order: 'MaintainOrderJoin | None' = None) -> 'DataFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_join_asof",
+      "title": "pl.DataFrame.join_asof(self, other: 'DataFrame', *, left_on: 'str | None...",
+      "definition": "Perform an asof join.\n\nThis is similar to a left-join except that we match on nearest key rather than\nequal keys.\n\nBoth DataFrames must be sorted by the `on` key (within each `by` group, if\nspecified).\n\nFor each row in the left DataFrame:\n\n  - A \"backward\" search selects the last row in the right DataFrame whose\n    'on' key is less than or equal to the left's key.\n\n  - A \"forward\" search selects the first row in the right DataFrame whose\n    'on' key is greater than or equal to the left's key.\n\n  - A \"nearest\" search selects the last row in the right DataFrame whose value\n    is nearest to the left's key. String keys are not currently supported for a\n    nearest search.\n\nThe default is \"backward\".",
+      "key_facts": [
+        "Signature: polars.DataFrame.join_asof(self, other: 'DataFrame', *, left_on: 'str | None | Expr' = None, right_on: 'str | None | Expr' = None, on: 'str | None | Expr' = None, by_left: 'str | Sequence[str] | None' = None, by_right: 'str | Sequence[str] | None' = None, by: 'str | Sequence[str] | None' = None, strategy: 'AsofJoinStrategy' = 'backward', suffix: 'str' = '_right', tolerance: 'str | int | float | timedelta | None' = None, allow_parallel: 'bool' = True, force_parallel: 'bool' = False, coalesce: 'bool' = True, allow_exact_matches: 'bool' = True, check_sortedness: 'bool' = True) -> 'DataFrame'",
+        "Parameters:\nother\n    Lazy DataFrame to join with.\nleft_on\n    Join column of the left DataFrame.\nright_on\n    Join column of the right DataFrame.\non\n    Join column of both DataFrames. If set, `left_on` and `right_on` should be\n    None.\nby_left\n    Join on these columns before doing asof join\nby_right\n    Join on these columns before doing asof join\nby\n    Join on these columns before doing asof join\nstrategy : {'backward', 'forward', 'nearest'}\n    Join strategy.\nsuffix\n    Suffix to append to columns wi"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.DataFrame.join_asof",
+          "solution_steps": [
+            "Call polars.DataFrame.join_asof(self, other: 'DataFrame', *, left_on: 'str | None | Expr' = None, right_on: 'str | None | Expr' = None, on: 'str | None | Expr' = None, by_left: 'str | Sequence[str] | None' = None, by_right: 'str | Sequence[str] | None' = None, by: 'str | Sequence[str] | None' = None, strategy: 'AsofJoinStrategy' = 'backward', suffix: 'str' = '_right', tolerance: 'str | int | float | timedelta | None' = None, allow_parallel: 'bool' = True, force_parallel: 'bool' = False, coalesce: 'bool' = True, allow_exact_matches: 'bool' = True, check_sortedness: 'bool' = True) -> 'DataFrame'"
+          ],
+          "final_answer": "# See signature: polars.DataFrame.join_asof(self, other: 'DataFrame', *, left_on: 'str | None | Expr' = None, right_on: 'str | None | Expr' = N",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "You have trade prices at irregular timestamps and a quotes DataFrame with bid/ask spreads. For each trade, find the most recent quote (backward asof join) that occurred within 1 second, grouped by ticker symbol.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\nfrom datetime import datetime, timedelta\n\ntrades = pl.DataFrame({\n    'ticker': ['AAPL', 'AAPL', 'GOOG', 'GOOG'],\n    'time': [\n        datetime(2024, 1, 1, 9, 30, 0),\n        datetime(2024, 1, 1, 9, 30, 2),\n        datetime(2024, 1, 1, 9, 30, 1),\n        datetime(2024, 1, 1, 9, 30, 5),\n    ],\n    'trade_price': [150.0, 151.0, 2800.0, 2805.0]\n}).sort(['ticker', 'time'])\n\nquotes = pl.DataFrame({\n    'ticker': ['AAPL', 'AAPL', 'GOOG', 'GOOG'],\n    'time': [\n        datetime(2024, 1, 1, 9, 29, 59),\n        datetime(2024, 1, 1, 9, 30, 1),\n        datetime(2024, 1, 1, 9, 30, 0),\n        datetime(2024, 1, 1, 9, 30, 4),\n    ],\n    'spread': [0.01, 0.02, 0.05, 0.04]\n}).sort(['ticker', 'time'])\n\nresult = trades.join_asof(\n    quotes,\n    on='time',\n    by='ticker',\n    strategy='backward',\n    tolerance=timedelta(seconds=1)\n)\nprint(result)\n# Each trade row gets the most recent quote spread within 1 second for the same ticker.\n# Trades with no matching quote within tolerance will have null for 'spread'.",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT forget to sort both DataFrames by the 'on' key before calling join_asof. Unlike a regular join, join_asof requires both DataFrames to be pre-sorted on the join key (within each 'by' group if specified). Passing unsorted data will raise an error or produce silently incorrect results even if check_sortedness=True is set (it only checks, not fixes).",
+        "DO NOT use pandas-style merge_asof by passing unsorted groups when using 'by' — each group defined by 'by'/'by_left'/'by_right' must be individually sorted by the 'on' key. A DataFrame sorted globally by the 'on' key is NOT sufficient if groups are interleaved; you must sort by both the group columns and the 'on' key (e.g., df.sort(['group', 'timestamp'])) or the asof matching within groups will be wrong."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.join_asof",
+        "qualified_name": "polars.DataFrame.join_asof",
+        "polars_version": "1.40.1",
+        "signature": "(self, other: 'DataFrame', *, left_on: 'str | None | Expr' = None, right_on: 'str | None | Expr' = None, on: 'str | None | Expr' = None, by_left: 'str | Sequence[str] | None' = None, by_right: 'str | Sequence[str] | None' = None, by: 'str | Sequence[str] | None' = None, strategy: 'AsofJoinStrategy' = 'backward', suffix: 'str' = '_right', tolerance: 'str | int | float | timedelta | None' = None, allow_parallel: 'bool' = True, force_parallel: 'bool' = False, coalesce: 'bool' = True, allow_exact_matches: 'bool' = True, check_sortedness: 'bool' = True) -> 'DataFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_lazy",
+      "title": "pl.DataFrame.lazy(self) -> 'LazyFrame'",
+      "definition": "Start a lazy query from this point. This returns a `LazyFrame` object.\n\nOperations on a `LazyFrame` are not executed until this is triggered\nby calling one of:\n\n* :meth:`.collect() <polars.LazyFrame.collect>`\n    (run on all data)\n* :meth:`.explain() <polars.LazyFrame.explain>`\n    (print the query plan)\n* :meth:`.show_graph() <polars.LazyFrame.show_graph>`\n    (show the query plan as graphviz graph)\n* :meth:`.collect_schema() <polars.LazyFrame.collect_schema>`\n    (return the final frame schema)\n\nLazy operations are recommended because they allow for query optimization and\nadditional parallelism.",
+      "key_facts": [
+        "Signature: polars.DataFrame.lazy(self) -> 'LazyFrame'",
+        "Returns: LazyFrame"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.DataFrame.lazy",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [None, 2, 3, 4],\n\"b\": [0.5, None, 2.5, 13],\n\"c\": [True, True, False, None],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.lazy."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.lazy",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.lazy()",
+          "key_insight": "Standard usage pattern for polars.DataFrame.lazy."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT call .lazy() and then immediately chain .collect() on every single intermediate step — this defeats the purpose of lazy evaluation. The optimizer can only apply predicate pushdown, projection pushdown, and other optimizations when the full chain is built before collecting. E.g., avoid: df.lazy().filter(pl.col('a') > 1).collect().lazy().select('b').collect(). Instead, build the full chain first: df.lazy().filter(pl.col('a') > 1).select('b').collect()",
+        "DO NOT assume that calling .lazy() on a DataFrame creates a copy or snapshot of the data at that point in time. The LazyFrame holds a reference to the query plan, not a materialized copy. If you mutate the source or re-assign it, your lazy query may produce unexpected results. Always treat the LazyFrame as a deferred computation, not a frozen dataset."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.lazy",
+        "qualified_name": "polars.DataFrame.lazy",
+        "polars_version": "1.40.1",
+        "signature": "(self) -> 'LazyFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_pivot",
+      "title": "pl.DataFrame.pivot(self, on: 'ColumnNameOrSelector | Sequence[Column...",
+      "definition": "Create a spreadsheet-style pivot table as a DataFrame.\n\nOnly available in eager mode. See \"Examples\" section below for how to do a\n\"lazy pivot\" if you know the unique column values in advance.\n\n.. versionchanged:: 1.0.0\n    The `columns` parameter was renamed `on`.",
+      "key_facts": [
+        "Signature: polars.DataFrame.pivot(self, on: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector]', on_columns: 'Sequence[Any] | pl.Series | pl.DataFrame | None' = None, *, index: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, values: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, aggregate_function: 'PivotAgg | Expr | None' = None, maintain_order: 'bool' = True, sort_columns: 'bool' = False, separator: 'str' = '_', column_naming: \"Literal['auto', 'combine']\" = 'auto') -> 'DataFrame'",
+        "Parameters:\non\n    The column(s) whose values will be used as the new columns of the output\n    DataFrame.\non_columns\n    What value combinations will be considered for the output table.\nindex\n    The column(s) that remain from the input to the output. The output DataFrame will have one row\n    for each unique combination of the `index`'s values.\n    If None, all remaining columns not specified on `on` and `values` will be used. At least one\n    of `index` and `values` must be specified.\nvalues\n    The exis"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.DataFrame.pivot",
+          "solution_steps": [
+            "Call polars.DataFrame.pivot(self, on: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector]', on_columns: 'Sequence[Any] | pl.Series | pl.DataFrame | None' = None, *, index: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, values: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, aggregate_function: 'PivotAgg | Expr | None' = None, maintain_order: 'bool' = True, sort_columns: 'bool' = False, separator: 'str' = '_', column_naming: \"Literal['auto', 'combine']\" = 'auto') -> 'DataFrame'"
+          ],
+          "final_answer": "# See signature: polars.DataFrame.pivot(self, on: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector]', on_columns: 'Sequence[Any] | pl.",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "Given a DataFrame of monthly sales by region and product, pivot it so each product becomes its own column, with regions as rows and total sales as values.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\n\ndf = pl.DataFrame({\n    'region': ['North', 'North', 'South', 'South', 'East', 'East'],\n    'product': ['Widget', 'Gadget', 'Widget', 'Gadget', 'Widget', 'Gadget'],\n    'sales': [100, 200, 150, 250, 120, 180]\n})\n\nresult = df.pivot(\n    on='product',\n    index='region',\n    values='sales',\n    aggregate_function='sum'\n)\n\nprint(result)\n# shape: (3, 3)\n# ┌────────┬────────┬────────┐\n# │ region ┆ Widget ┆ Gadget │\n# │ ---    ┆ ---    ┆ ---    │\n# │ str    ┆ i64    ┆ i64    │\n# ╞════════╪════════╪════════╡\n# │ North  ┆ 100    ┆ 200    │\n# │ South  ┆ 150    ┆ 250    │\n# │ East   ┆ 120    ┆ 180    │\n# └────────┴────────┴────────┘",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use the old `columns` parameter name from pre-1.0 Polars — it was renamed to `on` in 1.0.0 and using `columns=` will raise a TypeError. Always use `on=` in Polars 1.0+.",
+        "DO NOT assume pivot works in lazy mode — `DataFrame.pivot` is eager-only. If you need lazy execution, you must know the unique column values in advance and manually construct `pl.col(...).filter(...).alias(...)` expressions with `LazyFrame.select` instead."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.pivot",
+        "qualified_name": "polars.DataFrame.pivot",
+        "polars_version": "1.40.1",
+        "signature": "(self, on: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector]', on_columns: 'Sequence[Any] | pl.Series | pl.DataFrame | None' = None, *, index: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, values: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, aggregate_function: 'PivotAgg | Expr | None' = None, maintain_order: 'bool' = True, sort_columns: 'bool' = False, separator: 'str' = '_', column_naming: \"Literal['auto', 'combine']\" = 'auto') -> 'DataFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_rolling",
+      "title": "pl.DataFrame.rolling(self, index_column: 'IntoExpr', *, period: 'str |...",
+      "definition": "Create rolling groups based on a temporal or integer column.\n\nDifferent from a `group_by_dynamic` the windows are now determined by the\nindividual values and are not of constant intervals. For constant intervals use\n:func:`DataFrame.group_by_dynamic`.\n\nIf you have a time series `<t_0, t_1, ..., t_n>`, then by default the\nwindows created will be\n\n    * (t_0 - period, t_0]\n    * (t_1 - period, t_1]\n    * ...\n    * (t_n - period, t_n]\n\nwhereas if you pass a non-default `offset`, then the windows will be\n\n    * (t_0 + offset, t_0 + offset + period]\n    * (t_1 + offset, t_1 + offset + period]\n    * ...\n    * (t_n + offset, t_n + offset + period]\n\nThe `period` and `offset` arguments are created either from a timedelta, or\nby using the following string language:\n\n- 1ns   (1 nanosecond)\n- 1us   (1 microsecond)\n- 1ms   (1 millisecond)\n- 1s    (1 second)\n- 1m    (1 minute)\n- 1h    (1 hour)\n- 1d    (1 calendar day)\n- 1w    (1 calendar week)\n- 1mo   (1 calendar month)\n- 1q    (1 calendar quarter)\n- 1y    (1 calendar year)\n- 1i    (1 index count)\n\nOr combine them:\n\"3d12h4m25s\" # 3 days, 12 hours, 4 minutes, and 25 seconds\n\nBy \"calendar day\", we mean the corresponding time on the next day (which may\nnot be 24 hours, due to daylight savings). Similarly for \"calendar week\",\n\"calendar month\", \"calendar quarter\", and \"calendar year\".\n\n.. versionchanged:: 0.20.14\n    The `by` parameter was renamed `group_by`.",
+      "key_facts": [
+        "Signature: polars.DataFrame.rolling(self, index_column: 'IntoExpr', *, period: 'str | timedelta', offset: 'str | timedelta | None' = None, closed: 'ClosedInterval' = 'right', group_by: 'IntoExpr | Iterable[IntoExpr] | None' = None) -> 'RollingGroupBy'",
+        "Parameters:\nindex_column\n    Column used to group based on the time window.\n    Often of type Date/Datetime.\n    This column must be sorted in ascending order (or, if `group_by` is\n    specified, then it must be sorted in ascending order within each group).\n\n    In case of a rolling operation on indices, dtype needs to be one of\n    {UInt32, UInt64, Int32, Int64}. Note that the first three get temporarily\n    cast to Int64, so if performance matters use an Int64 column.\nperiod\n    Length of the window - mus"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.DataFrame.rolling",
+          "solution_steps": [
+            "Call polars.DataFrame.rolling(self, index_column: 'IntoExpr', *, period: 'str | timedelta', offset: 'str | timedelta | None' = None, closed: 'ClosedInterval' = 'right', group_by: 'IntoExpr | Iterable[IntoExpr] | None' = None) -> 'RollingGroupBy'"
+          ],
+          "final_answer": "# See signature: polars.DataFrame.rolling(self, index_column: 'IntoExpr', *, period: 'str | timedelta', offset: 'str | timedelta | None' = No",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "Given a DataFrame of sales transactions with a 'date' (Date) column and a 'revenue' (Int64) column, compute for each transaction the total revenue over the preceding 7-day window (including that day).",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\nfrom datetime import date\n\ndf = pl.DataFrame({\n    \"date\": [date(2024, 1, 1), date(2024, 1, 3), date(2024, 1, 5), date(2024, 1, 8), date(2024, 1, 10)],\n    \"revenue\": [100, 200, 150, 300, 250]\n}).sort(\"date\")\n\nresult = (\n    df.rolling(index_column=\"date\", period=\"7d\")\n    .agg(pl.col(\"revenue\").sum().alias(\"revenue_last_7d\"))\n)\nprint(result)\n# Each row shows the sum of revenue within the 7-day window ending on that date (inclusive).",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT assume rolling windows are fixed-size like in pandas .rolling(n) — in Polars DataFrame.rolling, the window is determined by the TIME or INTEGER SPAN (period), not a fixed row count. Two consecutive rows may fall in windows of very different sizes depending on the actual values in the index_column.",
+        "DO NOT forget that the index_column must be SORTED in ascending order before calling .rolling(). Polars does not automatically sort the data, and passing an unsorted column will produce silently incorrect or unexpected grouping results without raising an error."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.rolling",
+        "qualified_name": "polars.DataFrame.rolling",
+        "polars_version": "1.40.1",
+        "signature": "(self, index_column: 'IntoExpr', *, period: 'str | timedelta', offset: 'str | timedelta | None' = None, closed: 'ClosedInterval' = 'right', group_by: 'IntoExpr | Iterable[IntoExpr] | None' = None) -> 'RollingGroupBy'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_select",
+      "title": "pl.DataFrame.select(self, *exprs: 'IntoExpr | Iterable[IntoExpr]', **...",
+      "definition": "Select columns from this DataFrame.",
+      "key_facts": [
+        "Signature: polars.DataFrame.select(self, *exprs: 'IntoExpr | Iterable[IntoExpr]', **named_exprs: 'IntoExpr') -> 'DataFrame'",
+        "Parameters:\n*exprs\n    Column(s) to select, specified as positional arguments.\n    Accepts expression input. Strings are parsed as column names,\n    other non-expression inputs are parsed as literals.\n**named_exprs\n    Additional columns to select, specified as keyword arguments.\n    The columns will be renamed to the keyword used."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.DataFrame.select",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"foo\": [1, 2, 3],\n\"bar\": [6, 7, 8],\n\"ham\": [\"a\", \"b\", \"c\"],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.select."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.select",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.select(\"foo\")",
+          "key_insight": "Standard usage pattern for polars.DataFrame.select."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.select",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.select([\"foo\", \"bar\"])",
+          "key_insight": "Standard usage pattern for polars.DataFrame.select."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pandas-style bracket indexing (df[['foo', 'bar']]) to select and transform columns — unlike pandas, Polars' idiomatic approach is df.select([...]) with expressions, and mixing pandas-style access with Polars expressions will bypass lazy optimizations and may produce unexpected results or errors.",
+        "DO NOT assume that passing a plain Python scalar (e.g., df.select(42)) will raise an error — Polars silently parses non-expression, non-string inputs as literals, broadcasting them into a full column. This can mask bugs where you intended to reference a column by name but passed an integer index instead (e.g., df.select(0) gives a column of zeros, not the first column)."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.select",
+        "qualified_name": "polars.DataFrame.select",
+        "polars_version": "1.40.1",
+        "signature": "(self, *exprs: 'IntoExpr | Iterable[IntoExpr]', **named_exprs: 'IntoExpr') -> 'DataFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_sort",
+      "title": "pl.DataFrame.sort(self, by: 'IntoExpr | Iterable[IntoExpr]', *more_...",
+      "definition": "Sort the dataframe by the given columns.",
+      "key_facts": [
+        "Signature: polars.DataFrame.sort(self, by: 'IntoExpr | Iterable[IntoExpr]', *more_by: 'IntoExpr', descending: 'bool | Sequence[bool]' = False, nulls_last: 'bool | Sequence[bool]' = False, multithreaded: 'bool' = True, maintain_order: 'bool' = False) -> 'DataFrame'",
+        "Parameters:\nby\n    Column(s) to sort by. Accepts expression input, including selectors. Strings\n    are parsed as column names.\n*more_by\n    Additional columns to sort by, specified as positional arguments.\ndescending\n    Sort in descending order. When sorting by multiple columns, can be specified\n    per column by passing a sequence of booleans.\nnulls_last\n    Place null values last; can specify a single boolean applying to all columns\n    or a sequence of booleans for per-column control.\nmultithreaded\n   "
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.DataFrame.sort",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [1, 2, None],\n\"b\": [6.0, 5.0, 4.0],\n\"c\": [\"a\", \"c\", \"b\"],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.sort."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.sort",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.sort(\"a\")",
+          "key_insight": "Standard usage pattern for polars.DataFrame.sort."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.sort",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.sort(pl.col(\"a\") + pl.col(\"b\") * 2, nulls_last=True)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.sort."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT pass a list to `descending` without ensuring it matches the exact number of columns in `by`. For example, `df.sort(['a', 'b'], descending=[True])` will raise an error because the length of `descending` must match the number of sort columns. Each column needs its own boolean if using a sequence.",
+        "DO NOT assume `sort` is stable (i.e., preserves original row order for equal elements) by default. The default `maintain_order=False` means equal rows may appear in any order, which can cause non-reproducible results. Set `maintain_order=True` when a deterministic, stable sort is required, though this comes at a slight performance cost."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.sort",
+        "qualified_name": "polars.DataFrame.sort",
+        "polars_version": "1.40.1",
+        "signature": "(self, by: 'IntoExpr | Iterable[IntoExpr]', *more_by: 'IntoExpr', descending: 'bool | Sequence[bool]' = False, nulls_last: 'bool | Sequence[bool]' = False, multithreaded: 'bool' = True, maintain_order: 'bool' = False) -> 'DataFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_unpivot",
+      "title": "pl.DataFrame.unpivot(self, on: 'ColumnNameOrSelector | Sequence[Column...",
+      "definition": "Unpivot a DataFrame from wide to long format.\n\nOptionally leaves identifiers set.\n\nThis function is useful to massage a DataFrame into a format where one or more\ncolumns are identifier variables (index) while all other columns, considered\nmeasured variables (on), are \"unpivoted\" to the row axis leaving just\ntwo non-identifier columns, 'variable' and 'value'.",
+      "key_facts": [
+        "Signature: polars.DataFrame.unpivot(self, on: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, *, index: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, variable_name: 'str | None' = None, value_name: 'str | None' = None) -> 'DataFrame'",
+        "Parameters:\non\n    Column(s) or selector(s) to use as values variables; if `on`\n    is empty no columns will be used. If set to `None` (default)\n    all columns that are not in `index` will be used.\nindex\n    Column(s) or selector(s) to use as identifier variables.\nvariable_name\n    Name to give to the `variable` column. Defaults to \"variable\"\nvalue_name\n    Name to give to the `value` column. Defaults to \"value\""
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.DataFrame.unpivot",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [\"x\", \"y\", \"z\"],\n\"b\": [1, 3, 5],\n\"c\": [2, 4, 6],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.unpivot."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.unpivot",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "import polars.selectors as cs",
+          "key_insight": "Standard usage pattern for polars.DataFrame.unpivot."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.unpivot",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.unpivot(cs.numeric(), index=\"a\")",
+          "key_insight": "Standard usage pattern for polars.DataFrame.unpivot."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use .melt() — that is Polars 0.x. Use .unpivot().",
+        "DO NOT assume column order in the output is preserved from the original DataFrame. The unpivoted rows are generated per identifier group, so always sort explicitly if order matters (e.g., add `.sort(['id', 'variable'])` after unpivot).",
+        "DO NOT include identifier columns in the `on` parameter — if a column appears in both `index` and `on`, Polars will raise an error or produce unexpected results. Explicitly specify `on` using selectors like `cs.numeric()` or list only the measurement columns to avoid accidental overlap."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.unpivot",
+        "qualified_name": "polars.DataFrame.unpivot",
+        "polars_version": "1.40.1",
+        "signature": "(self, on: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, *, index: 'ColumnNameOrSelector | Sequence[ColumnNameOrSelector] | None' = None, variable_name: 'str | None' = None, value_name: 'str | None' = None) -> 'DataFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_df_with_columns",
+      "title": "pl.DataFrame.with_columns(self, *exprs: 'IntoExpr | Iterable[IntoExpr]', **...",
+      "definition": "Add columns to this DataFrame.\n\nAdded columns will replace existing columns with the same name.",
+      "key_facts": [
+        "Signature: polars.DataFrame.with_columns(self, *exprs: 'IntoExpr | Iterable[IntoExpr]', **named_exprs: 'IntoExpr') -> 'DataFrame'",
+        "Parameters:\n*exprs\n    Column(s) to add, specified as positional arguments.\n    Accepts expression input. Strings are parsed as column names, other\n    non-expression inputs are parsed as literals.\n**named_exprs\n    Additional columns to add, specified as keyword arguments.\n    The columns will be renamed to the keyword used.",
+        "Returns: DataFrame\n    A new DataFrame with the columns added."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.DataFrame.with_columns",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [1, 2, 3, 4],\n\"b\": [0.5, 4, 10, 13],\n\"c\": [True, True, False, True],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.DataFrame.with_columns."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.with_columns",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns((pl.col(\"a\") ** 2).alias(\"a^2\"))",
+          "key_insight": "Standard usage pattern for polars.DataFrame.with_columns."
+        },
+        {
+          "problem": "Example usage of polars.DataFrame.with_columns",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(pl.col(\"a\").cast(pl.Float64))",
+          "key_insight": "Standard usage pattern for polars.DataFrame.with_columns."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT mutate the DataFrame in-place expecting pandas-style behavior — `with_columns` always returns a NEW DataFrame and the original remains unchanged. You must reassign: `df = df.with_columns(...)` or the new columns are silently lost.",
+        "DO NOT pass a plain Python list of values directly as a new column without wrapping it in `pl.Series` or `pl.lit()`. For example, `df.with_columns([1, 2, 3])` will treat the list as a literal scalar, not a column of values, leading to unexpected results or errors."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "DataFrame.with_columns",
+        "qualified_name": "polars.DataFrame.with_columns",
+        "polars_version": "1.40.1",
+        "signature": "(self, *exprs: 'IntoExpr | Iterable[IntoExpr]', **named_exprs: 'IntoExpr') -> 'DataFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_diff",
+      "title": "pl.Expr.diff(self, n: 'int | IntoExpr' = 1, null_behavior: 'Nu...",
+      "definition": "Calculate the first discrete difference between shifted items.",
+      "key_facts": [
+        "Signature: polars.Expr.diff(self, n: 'int | IntoExpr' = 1, null_behavior: 'NullBehavior' = 'ignore') -> 'Expr'",
+        "Parameters:\nn\n    Number of slots to shift.\nnull_behavior : {'ignore', 'drop'}\n    How to handle null values."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.diff",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"int\": [20, 10, 30, 25, 35]})",
+          "key_insight": "Standard usage pattern for polars.Expr.diff."
+        },
+        {
+          "problem": "Example usage of polars.Expr.diff",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(change=pl.col(\"int\").diff())",
+          "key_insight": "Standard usage pattern for polars.Expr.diff."
+        },
+        {
+          "problem": "Example usage of polars.Expr.diff",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(change=pl.col(\"int\").diff(n=2))",
+          "key_insight": "Standard usage pattern for polars.Expr.diff."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use `null_behavior='drop'` inside `with_columns` expecting the result to align row-for-row with the original DataFrame. When `null_behavior='drop'` is used, the nulls are removed and the resulting Series has fewer elements than the original, causing a shape mismatch error. Use `null_behavior='drop'` only in `select` or `filter` contexts where a standalone shorter Series is acceptable.",
+        "DO NOT assume `.diff(n=2)` produces the same number of non-null values as `.diff(n=1)`. With `n=2`, the first `n` rows are always null (not just the first 1), so larger values of `n` silently discard more leading rows of useful difference data — this is especially easy to overlook when chaining further aggregations like `.mean()` or `.sum()` that silently skip nulls."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.diff",
+        "qualified_name": "polars.Expr.diff",
+        "polars_version": "1.40.1",
+        "signature": "(self, n: 'int | IntoExpr' = 1, null_behavior: 'NullBehavior' = 'ignore') -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_dt_month",
+      "title": "pl.Expr.dt.month(self) -> 'Expr'",
+      "definition": "Extract month from underlying Date representation.\n\nApplies to Date and Datetime columns.\n\nReturns the month number starting from 1.\nThe return value ranges from 1 to 12.",
+      "key_facts": [
+        "Signature: polars.Expr.dt.month(self) -> 'Expr'",
+        "Returns: Expr\n    Expression of data type :class:`Int8`."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.dt.month",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "from datetime import date",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.month."
+        },
+        {
+          "problem": "Example usage of polars.Expr.dt.month",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\"date\": [date(2001, 1, 1), date(2001, 6, 30), date(2001, 12, 27)]}\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.month."
+        },
+        {
+          "problem": "Example usage of polars.Expr.dt.month",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(pl.col(\"date\").dt.month().alias(\"month\"))",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.month."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT call .dt.month() on a string column even if it looks like a date — you must first cast to Date or Datetime (e.g., pl.col('date_str').str.to_date('%Y-%m-%d').dt.month()), otherwise Polars will raise an InvalidOperationError.",
+        "DO NOT assume the return type is Int32 or Int64 — .dt.month() returns Int8, so if you try to join or compare it against a column of a different integer type without casting, you may get unexpected type mismatch errors."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.dt.month",
+        "qualified_name": "polars.Expr.dt.month",
+        "polars_version": "1.40.1",
+        "signature": "(self) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_dt_offset_by",
+      "title": "pl.Expr.dt.offset_by(self, by: 'str | Expr') -> 'Expr'",
+      "definition": "Offset this date by a relative time offset.\n\nThis differs from `pl.col(\"foo\") + timedelta` in that it can\ntake months and leap years into account. Note that only a single minus\nsign is allowed in the `by` string, as the first character.",
+      "key_facts": [
+        "Signature: polars.Expr.dt.offset_by(self, by: 'str | Expr') -> 'Expr'",
+        "Parameters:\nby\n    The offset is dictated by the following string language:\n\n    - 1ns   (1 nanosecond)\n    - 1us   (1 microsecond)\n    - 1ms   (1 millisecond)\n    - 1s    (1 second)\n    - 1m    (1 minute)\n    - 1h    (1 hour)\n    - 1d    (1 calendar day)\n    - 1w    (1 calendar week)\n    - 1mo   (1 calendar month)\n    - 1q    (1 calendar quarter)\n    - 1y    (1 calendar year)\n\n    By \"calendar day\", we mean the corresponding time on the next day (which may\n    not be 24 hours, due to daylight savings - in ",
+        "Returns: Expr\n    Expression of data type :class:`Date` or :class:`Datetime`."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.dt.offset_by",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "from datetime import datetime",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.offset_by."
+        },
+        {
+          "problem": "Example usage of polars.Expr.dt.offset_by",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"dates\": pl.datetime_range(\ndatetime(2000, 1, 1), datetime(2005, 1, 1), \"1y\", eager=True\n),\n\"offset\": [\"1d\", \"2d\", \"-1d\", \"1mo\", None, \"1y\"],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.offset_by."
+        },
+        {
+          "problem": "Example usage of polars.Expr.dt.offset_by",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.select(\n[\npl.col(\"dates\").dt.offset_by(\"1y\").alias(\"date_plus_1y\"),\npl.col(\"dates\").dt.offset_by(\"-1y2mo\").alias(\"date_min\"),\n]\n)\n(truncated)",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.offset_by."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use multiple offset units in a single string (e.g., '1y2mo') — `offset_by` only accepts a single unit per call. Chain multiple `.dt.offset_by()` calls instead, e.g., `.dt.offset_by('1y').dt.offset_by('2mo')`.",
+        "DO NOT place a minus sign anywhere except as the very first character of the string (e.g., '1mo-5d' is invalid). Only forms like '-1mo' are permitted, and combining arithmetic like '+1mo' is also invalid."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.dt.offset_by",
+        "qualified_name": "polars.Expr.dt.offset_by",
+        "polars_version": "1.40.1",
+        "signature": "(self, by: 'str | Expr') -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_dt_truncate",
+      "title": "pl.Expr.dt.truncate(self, every: 'str | dt.timedelta | Expr') -> 'Exp...",
+      "definition": "Divide the date/datetime range into buckets.\n\nEach date/datetime is mapped to the start of its bucket using the corresponding\nlocal datetime. Note that:\n\n- Weekly buckets start on Monday.\n- All other buckets start on the Unix epoch (1970-01-01).\n- Ambiguous results are localised using the DST offset of the original\n  timestamp - for example, truncating `'2022-11-06 01:30:00 CST'` by\n  `'1h'` results in `'2022-11-06 01:00:00 CST'`, whereas truncating\n  `'2022-11-06 01:30:00 CDT'` by `'1h'` results in\n  `'2022-11-06 01:00:00 CDT'`.",
+      "key_facts": [
+        "Signature: polars.Expr.dt.truncate(self, every: 'str | dt.timedelta | Expr') -> 'Expr'",
+        "Parameters:\nevery\n    The size of each bucket.",
+        "Returns: Expr\n    Expression of data type :class:`Date` or :class:`Datetime`."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.dt.truncate",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "from datetime import timedelta, datetime",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.truncate."
+        },
+        {
+          "problem": "Example usage of polars.Expr.dt.truncate",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = (\npl.datetime_range(\ndatetime(2001, 1, 1),\ndatetime(2001, 1, 2),\ntimedelta(minutes=225),\neager=True,\n)\n.alias(\"datetime\")\n.to_frame()\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.truncate."
+        },
+        {
+          "problem": "Example usage of polars.Expr.dt.truncate",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.truncate."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT assume truncation aligns to calendar boundaries like month or year start — all non-weekly buckets align to the Unix epoch (1970-01-01), so truncating to '1mo' or '1y' may produce unexpected results; use `dt.month_start()` or `dt.year_start()` instead for calendar-aligned truncation.",
+        "DO NOT pass a pandas Timedelta or Python datetime.timedelta directly as the `every` argument without verifying compatibility — prefer Polars duration strings (e.g., '15m', '1h', '30s') or Python `datetime.timedelta` objects, and avoid mixing string formats from other libraries which will raise a TypeError."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.dt.truncate",
+        "qualified_name": "polars.Expr.dt.truncate",
+        "polars_version": "1.40.1",
+        "signature": "(self, every: 'str | dt.timedelta | Expr') -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_dt_year",
+      "title": "pl.Expr.dt.year(self) -> 'Expr'",
+      "definition": "Extract year from underlying Date representation.\n\nApplies to Date and Datetime columns.\n\nReturns the year number in the calendar date.",
+      "key_facts": [
+        "Signature: polars.Expr.dt.year(self) -> 'Expr'",
+        "Returns: Expr\n    Expression of data type :class:`Int32`."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.dt.year",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "from datetime import date",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.year."
+        },
+        {
+          "problem": "Example usage of polars.Expr.dt.year",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\"date\": [date(1977, 1, 1), date(1978, 1, 1), date(1979, 1, 1)]}\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.year."
+        },
+        {
+          "problem": "Example usage of polars.Expr.dt.year",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\ncalendar_year=pl.col(\"date\").dt.year(),\niso_year=pl.col(\"date\").dt.iso_year(),\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.dt.year."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT call .dt.year on a String/Utf8 column even if it looks like a date — you must first cast to Date or Datetime (e.g., pl.col('date_str').str.to_date('%Y-%m-%d').dt.year()), otherwise Polars will raise a SchemaError at runtime.",
+        "DO NOT confuse .dt.year() with .dt.iso_year() — for dates in early January that belong to the previous ISO week-year (e.g., 1977-01-01 returns iso_year=1976), using the wrong method will silently produce off-by-one year values in week-based calculations."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.dt.year",
+        "qualified_name": "polars.Expr.dt.year",
+        "polars_version": "1.40.1",
+        "signature": "(self) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_fill_null",
+      "title": "pl.Expr.fill_null(self, value: 'Any | Expr | None' = None, strategy...",
+      "definition": "Fill null values using the specified value or strategy.\n\nTo interpolate over null values see interpolate.\nSee the examples below to fill nulls with an expression.",
+      "key_facts": [
+        "Signature: polars.Expr.fill_null(self, value: 'Any | Expr | None' = None, strategy: 'FillNullStrategy | None' = None, limit: 'int | None' = None) -> 'Expr'",
+        "Parameters:\nvalue\n    Value used to fill null values.\nstrategy : {None, 'forward', 'backward', 'min', 'max', 'mean', 'zero', 'one'}\n    Strategy used to fill null values.\nlimit\n    Number of consecutive null values to fill when using the 'forward' or\n    'backward' strategy."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.fill_null",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [1, 2, None],\n\"b\": [4, None, 6],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.fill_null."
+        },
+        {
+          "problem": "Example usage of polars.Expr.fill_null",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(pl.col(\"b\").fill_null(strategy=\"zero\"))",
+          "key_insight": "Standard usage pattern for polars.Expr.fill_null."
+        },
+        {
+          "problem": "Example usage of polars.Expr.fill_null",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(pl.col(\"b\").fill_null(99))",
+          "key_insight": "Standard usage pattern for polars.Expr.fill_null."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT confuse null and NaN values — fill_null will NOT fill NaN (float Not-a-Number) values. Use fill_nan for NaN values instead. Applying fill_null to a column with NaN values will leave them untouched, which can cause silent bugs in downstream computations.",
+        "DO NOT use the 'forward' or 'backward' strategy without setting a 'limit' when you want bounded fill behavior — by default, limit=None means ALL consecutive nulls will be filled, which may propagate stale values further than intended across large gaps in time-series or sequential data."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.fill_null",
+        "qualified_name": "polars.Expr.fill_null",
+        "polars_version": "1.40.1",
+        "signature": "(self, value: 'Any | Expr | None' = None, strategy: 'FillNullStrategy | None' = None, limit: 'int | None' = None) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_is_not_null",
+      "title": "pl.Expr.is_not_null(self) -> 'Expr'",
+      "definition": "Returns a boolean Series indicating which values are not null.",
+      "key_facts": [
+        "Signature: polars.Expr.is_not_null(self) -> 'Expr'"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.is_not_null",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [1, 2, None, 1, 5],\n\"b\": [1.0, 2.0, float(\"nan\"), 1.0, 5.0],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.is_not_null."
+        },
+        {
+          "problem": "Example usage of polars.Expr.is_not_null",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\npl.all().is_not_null().name.suffix(\"_not_null\")  # nan != null\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.is_not_null."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT confuse NaN with null: `is_not_null()` treats float NaN as a valid (non-null) value and returns `true` for it. If you want to exclude NaN values as well, you must additionally use `.is_nan()` and combine the conditions, e.g., `pl.col('b').is_not_null() & ~pl.col('b').is_nan()`.",
+        "DO NOT use pandas-style `df[col].notna()` or `df[col].notnull()` — these do not exist in Polars. Always use the expression `.is_not_null()` within a Polars expression context such as `pl.col('a').is_not_null()`."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.is_not_null",
+        "qualified_name": "polars.Expr.is_not_null",
+        "polars_version": "1.40.1",
+        "signature": "(self) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_is_null",
+      "title": "pl.Expr.is_null(self) -> 'Expr'",
+      "definition": "Returns a boolean Series indicating which values are null.",
+      "key_facts": [
+        "Signature: polars.Expr.is_null(self) -> 'Expr'"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.is_null",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"a\": [1, 2, None, 1, 5],\n\"b\": [1.0, 2.0, float(\"nan\"), 1.0, 5.0],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.is_null."
+        },
+        {
+          "problem": "Example usage of polars.Expr.is_null",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(pl.all().is_null().name.suffix(\"_isnull\"))  # nan != null",
+          "key_insight": "Standard usage pattern for polars.Expr.is_null."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT confuse NaN with null: `is_null()` returns False for float NaN values. NaN is a valid floating-point value in Polars, not a missing value. Use `is_nan()` to detect NaN, and combine both if you want to catch all 'missing-like' values: `pl.col('b').is_null() | pl.col('b').is_nan()`.",
+        "DO NOT use pandas-style `df['col'].isnull()` or `df['col'] == None` to check for nulls in Polars — these will either error or produce incorrect results. Always use the Polars expression `pl.col('col').is_null()` within a lazy/eager context like `filter`, `with_columns`, or `select`."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.is_null",
+        "qualified_name": "polars.Expr.is_null",
+        "polars_version": "1.40.1",
+        "signature": "(self) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_lf_collect",
+      "title": "pl.LazyFrame.collect(self, *, type_coercion: 'bool' = True, predicate_...",
+      "definition": "Materialize this LazyFrame into a DataFrame.\n\nBy default, all query optimizations are enabled. Individual optimizations may\nbe disabled by setting the corresponding parameter to `False`.",
+      "key_facts": [
+        "Signature: polars.LazyFrame.collect(self, *, type_coercion: 'bool' = True, predicate_pushdown: 'bool' = True, projection_pushdown: 'bool' = True, simplify_expression: 'bool' = True, slice_pushdown: 'bool' = True, comm_subplan_elim: 'bool' = True, comm_subexpr_elim: 'bool' = True, cluster_with_columns: 'bool' = True, collapse_joins: 'bool' = True, no_optimization: 'bool' = False, engine: 'EngineType' = 'auto', background: 'bool' = False, optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>, **_kwargs: 'Any') -> 'DataFrame | InProcessQuery'",
+        "Parameters:\ntype_coercion\n    Do type coercion optimization.\n\n    .. deprecated:: 1.30.0\n        Use the `optimizations` parameters.\npredicate_pushdown\n    Do predicate pushdown optimization.\n\n    .. deprecated:: 1.30.0\n        Use the `optimizations` parameters.\nprojection_pushdown\n    Do projection pushdown optimization.\n\n    .. deprecated:: 1.30.0\n        Use the `optimizations` parameters.\nsimplify_expression\n    Run simplify expressions optimization.\n\n    .. deprecated:: 1.30.0\n        Use the `optimiz"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.LazyFrame.collect",
+          "solution_steps": [
+            "Call polars.LazyFrame.collect(self, *, type_coercion: 'bool' = True, predicate_pushdown: 'bool' = True, projection_pushdown: 'bool' = True, simplify_expression: 'bool' = True, slice_pushdown: 'bool' = True, comm_subplan_elim: 'bool' = True, comm_subexpr_elim: 'bool' = True, cluster_with_columns: 'bool' = True, collapse_joins: 'bool' = True, no_optimization: 'bool' = False, engine: 'EngineType' = 'auto', background: 'bool' = False, optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>, **_kwargs: 'Any') -> 'DataFrame | InProcessQuery'"
+          ],
+          "final_answer": "# See signature: polars.LazyFrame.collect(self, *, type_coercion: 'bool' = True, predicate_pushdown: 'bool' = True, projection_pushdown: 'boo",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "Build a lazy pipeline that reads a list of records, filters rows where sales > 100, selects only 'region' and 'sales' columns, then materialize it into a DataFrame using collect() with background execution disabled.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\n\ndata = {\n    'region': ['North', 'South', 'East', 'West'],\n    'sales': [80, 150, 200, 90],\n    'cost': [40, 60, 80, 45]\n}\n\nlf = pl.LazyFrame(data)\n\nresult = (\n    lf\n    .filter(pl.col('sales') > 100)\n    .select(['region', 'sales'])\n    .collect(background=False)\n)\n\nprint(result)\n# shape: (2, 2)\n# ┌────────┬───────┐\n# │ region ┆ sales │\n# │ ---    ┆ ---   │\n# │ str    ┆ i64   │\n# ╞════════╪═══════╡\n# │ South  ┆ 150   │\n# │ East   ┆ 200   │\n# └────────┴───────┘",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT call .collect() inside a loop on the same LazyFrame repeatedly (e.g., for iterative filtering or inspection). Each call re-executes the full query plan from scratch. Instead, collect once into a DataFrame and operate on that.",
+        "DO NOT assume that disabling optimizations like predicate_pushdown or projection_pushdown via individual boolean parameters is forward-compatible — these parameters are deprecated as of Polars 1.30.0. Use the `optimizations` parameter with `QueryOptFlags` instead to control optimization behavior in a supported way."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "LazyFrame.collect",
+        "qualified_name": "polars.LazyFrame.collect",
+        "polars_version": "1.40.1",
+        "signature": "(self, *, type_coercion: 'bool' = True, predicate_pushdown: 'bool' = True, projection_pushdown: 'bool' = True, simplify_expression: 'bool' = True, slice_pushdown: 'bool' = True, comm_subplan_elim: 'bool' = True, comm_subexpr_elim: 'bool' = True, cluster_with_columns: 'bool' = True, collapse_joins: 'bool' = True, no_optimization: 'bool' = False, engine: 'EngineType' = 'auto', background: 'bool' = False, optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>, **_kwargs: 'Any') -> 'DataFrame | InProcessQuery'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_lf_explain",
+      "title": "pl.LazyFrame.explain(self, *, format: 'ExplainFormat' = 'plain', optim...",
+      "definition": "Create a string representation of the query plan.\n\nDifferent optimizations can be turned on or off.",
+      "key_facts": [
+        "Signature: polars.LazyFrame.explain(self, *, format: 'ExplainFormat' = 'plain', optimized: 'bool' = True, type_coercion: 'bool' = True, predicate_pushdown: 'bool' = True, projection_pushdown: 'bool' = True, simplify_expression: 'bool' = True, slice_pushdown: 'bool' = True, comm_subplan_elim: 'bool' = True, comm_subexpr_elim: 'bool' = True, cluster_with_columns: 'bool' = True, collapse_joins: 'bool' = True, streaming: 'bool' = False, engine: 'EngineType' = 'auto', tree_format: 'bool | None' = None, optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>) -> 'str'",
+        "Parameters:\nformat : {'plain', 'tree'}\n    The format to use for displaying the logical plan.\noptimized\n    Return an optimized query plan. Defaults to `True`.\n    If this is set to `True` the subsequent\n    optimization flags control which optimizations\n    run.\ntype_coercion\n    Do type coercion optimization.\n\n    .. deprecated:: 1.30.0\n        Use the `optimizations` parameters.\npredicate_pushdown\n    Do predicate pushdown optimization.\n\n    .. deprecated:: 1.30.0\n        Use the `optimizations` paramete"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.LazyFrame.explain",
+          "solution_steps": [
+            "Call polars.LazyFrame.explain(self, *, format: 'ExplainFormat' = 'plain', optimized: 'bool' = True, type_coercion: 'bool' = True, predicate_pushdown: 'bool' = True, projection_pushdown: 'bool' = True, simplify_expression: 'bool' = True, slice_pushdown: 'bool' = True, comm_subplan_elim: 'bool' = True, comm_subexpr_elim: 'bool' = True, cluster_with_columns: 'bool' = True, collapse_joins: 'bool' = True, streaming: 'bool' = False, engine: 'EngineType' = 'auto', tree_format: 'bool | None' = None, optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>) -> 'str'"
+          ],
+          "final_answer": "# See signature: polars.LazyFrame.explain(self, *, format: 'ExplainFormat' = 'plain', optimized: 'bool' = True, type_coercion: 'bool' = True,",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "You have a LazyFrame built from a large CSV scan with a filter and column selection, and you want to verify that predicate pushdown and projection pushdown optimizations are actually being applied before collecting results.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\n\nlf = (\n    pl.scan_csv('data.csv')\n    .filter(pl.col('age') > 30)\n    .select(['name', 'age', 'salary'])\n)\n\n# Check the optimized plan to confirm pushdowns are applied\noptimized_plan = lf.explain(optimized=True, format='plain')\nprint('=== OPTIMIZED PLAN ===')\nprint(optimized_plan)\n\n# Compare with the unoptimized plan to see the difference\nunoptimized_plan = lf.explain(optimized=False, format='plain')\nprint('\\n=== UNOPTIMIZED PLAN ===')\nprint(unoptimized_plan)\n\n# In the optimized plan you should see the filter and column selection\n# pushed down into the CSV scan node itself (e.g., 'PROJECT 3/N COLUMNS'\n# and the predicate appearing inside the scan), confirming Polars will\n# only read the needed columns and rows from disk.",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT assume the unoptimized plan (optimized=False) reflects actual execution — Polars almost always runs the optimized plan, so debugging performance issues using the unoptimized plan can be misleading and waste time. Always inspect the optimized plan (the default) to understand real execution behavior.",
+        "DO NOT use `explain()` output programmatically by parsing its string output as structured data — the plain-text format is not guaranteed to be stable across Polars versions. If you need to compare or assert on query plans in tests, be aware that minor version upgrades may change the string representation unexpectedly."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "LazyFrame.explain",
+        "qualified_name": "polars.LazyFrame.explain",
+        "polars_version": "1.40.1",
+        "signature": "(self, *, format: 'ExplainFormat' = 'plain', optimized: 'bool' = True, type_coercion: 'bool' = True, predicate_pushdown: 'bool' = True, projection_pushdown: 'bool' = True, simplify_expression: 'bool' = True, slice_pushdown: 'bool' = True, comm_subplan_elim: 'bool' = True, comm_subexpr_elim: 'bool' = True, cluster_with_columns: 'bool' = True, collapse_joins: 'bool' = True, streaming: 'bool' = False, engine: 'EngineType' = 'auto', tree_format: 'bool | None' = None, optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>) -> 'str'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_lf_filter",
+      "title": "pl.LazyFrame.filter(self, *predicates: 'IntoExprColumn | Iterable[Int...",
+      "definition": "Filter rows in the LazyFrame based on a predicate expression.\n\nThe original order of the remaining rows is preserved.\n\nRows where the filter predicate does not evaluate to True are discarded\n(this includes rows where the predicate evaluates as `null`).",
+      "key_facts": [
+        "Signature: polars.LazyFrame.filter(self, *predicates: 'IntoExprColumn | Iterable[IntoExprColumn] | bool | list[bool] | np.ndarray[Any, Any]', **constraints: 'Any') -> 'LazyFrame'",
+        "Parameters:\npredicates\n    Expression that evaluates to a boolean Series.\nconstraints\n    Column filters; use `name = value` to filter columns using the supplied\n    value. Each constraint behaves the same as `pl.col(name).eq(value)`,\n    and is implicitly joined with the other filter conditions using `&`."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.LazyFrame.filter",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "lf = pl.LazyFrame(\n{\n\"foo\": [1, 2, 3, None, 4, None, 0],\n\"bar\": [6, 7, 8, None, None, 9, 0],\n\"ham\": [\"a\", \"b\", \"c\", None, \"d\", \"e\", \"f\"],\n}\n)",
+          "key_insight": "Standard usage pattern for polars.LazyFrame.filter."
+        },
+        {
+          "problem": "Example usage of polars.LazyFrame.filter",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "lf.filter(pl.col(\"foo\") > 1).collect()",
+          "key_insight": "Standard usage pattern for polars.LazyFrame.filter."
+        },
+        {
+          "problem": "Example usage of polars.LazyFrame.filter",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "lf.filter((pl.col(\"foo\") < 3) & (pl.col(\"ham\") == \"a\")).collect()",
+          "key_insight": "Standard usage pattern for polars.LazyFrame.filter."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT expect null-comparison rows to be retained: in Polars, any predicate involving a null value evaluates to null (not True/False), so rows like `pl.col('a') > pl.col('b')` where either column is null will be silently dropped. Use `pl.col('a').fill_null(...) > pl.col('b')` or add an explicit null-check with `| pl.col('a').is_null()` if you need to keep those rows.",
+        "DO NOT chain multiple `.filter()` calls thinking they create an OR condition — each additional `.filter()` call applies an AND (intersection) of predicates, just like passing multiple arguments to a single `.filter()`. To express OR logic, combine expressions explicitly with the `|` operator inside a single `.filter()`, e.g., `lf.filter((pl.col('x') > 5) | (pl.col('y') < 2))`."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "LazyFrame.filter",
+        "qualified_name": "polars.LazyFrame.filter",
+        "polars_version": "1.40.1",
+        "signature": "(self, *predicates: 'IntoExprColumn | Iterable[IntoExprColumn] | bool | list[bool] | np.ndarray[Any, Any]', **constraints: 'Any') -> 'LazyFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_lf_sink_csv",
+      "title": "pl.LazyFrame.sink_csv(self, path: 'str | Path | IO[bytes] | IO[str] | P...",
+      "definition": "Evaluate the query in streaming mode and write to a CSV file.\n\nThis allows streaming results that are larger than RAM to be written to disk.",
+      "key_facts": [
+        "Signature: polars.LazyFrame.sink_csv(self, path: 'str | Path | IO[bytes] | IO[str] | PartitionBy', *, include_bom: 'bool' = False, compression: \"Literal['uncompressed', 'gzip', 'zstd']\" = 'uncompressed', compression_level: 'int | None' = None, check_extension: 'bool' = True, include_header: 'bool' = True, separator: 'str' = ',', line_terminator: 'str' = '\\n', quote_char: 'str' = '\"', batch_size: 'int' = 1024, datetime_format: 'str | None' = None, date_format: 'str | None' = None, time_format: 'str | None' = None, float_scientific: 'bool | None' = None, float_precision: 'int | None' = None, decimal_comma: 'bool' = False, null_value: 'str | None' = None, quote_style: 'CsvQuoteStyle | None' = None, maintain_order: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, sync_on_close: 'SyncOnCloseMethod | None' = None, mkdir: 'bool' = False, lazy: 'bool' = False, engine: 'EngineType' = 'auto', optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>) -> 'LazyFrame | None'",
+        "Parameters:\npath\n    File path to which the file should be written.\ninclude_bom\n    Whether to include UTF-8 BOM in the CSV output.\ncompression\n    What compression format to use.\n\n    .. warning::\n        This functionality is considered **unstable**. It may be changed at any\n        point without it being considered a breaking change.\ncompression_level\n    The compression level to use, typically 0-9 or `None` to let the\n    engine choose.\n\n    .. warning::\n        This functionality is considered **unstab"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.LazyFrame.sink_csv",
+          "solution_steps": [
+            "Call polars.LazyFrame.sink_csv(self, path: 'str | Path | IO[bytes] | IO[str] | PartitionBy', *, include_bom: 'bool' = False, compression: \"Literal['uncompressed', 'gzip', 'zstd']\" = 'uncompressed', compression_level: 'int | None' = None, check_extension: 'bool' = True, include_header: 'bool' = True, separator: 'str' = ',', line_terminator: 'str' = '\\n', quote_char: 'str' = '\"', batch_size: 'int' = 1024, datetime_format: 'str | None' = None, date_format: 'str | None' = None, time_format: 'str | None' = None, float_scientific: 'bool | None' = None, float_precision: 'int | None' = None, decimal_comma: 'bool' = False, null_value: 'str | None' = None, quote_style: 'CsvQuoteStyle | None' = None, maintain_order: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, sync_on_close: 'SyncOnCloseMethod | None' = None, mkdir: 'bool' = False, lazy: 'bool' = False, engine: 'EngineType' = 'auto', optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>) -> 'LazyFrame | None'"
+          ],
+          "final_answer": "# See signature: polars.LazyFrame.sink_csv(self, path: 'str | Path | IO[bytes] | IO[str] | PartitionBy', *, include_bom: 'bool' = False, compr",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "You have a large LazyFrame with datetime and float columns and want to write it to a gzip-compressed CSV file using a semicolon separator, a custom datetime format, and 4 decimal places of float precision, without loading the full dataset into memory.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\nfrom datetime import datetime\n\nlf = pl.LazyFrame({\n    'timestamp': [datetime(2024, 1, 1, 12, 0), datetime(2024, 6, 15, 8, 30)],\n    'value': [3.141592653, 2.718281828],\n    'label': ['alpha', 'beta']\n})\n\nlf.sink_csv(\n    'output.csv.gz',\n    separator=';',\n    compression='gzip',\n    compression_level=6,\n    datetime_format='%Y-%m-%dT%H:%M:%S',\n    float_precision=4,\n    include_header=True,\n    null_value='NULL'\n)",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use `.collect()` before `sink_csv()` — calling `lf.collect().write_csv(path)` loads the entire dataset into RAM, defeating the purpose of streaming. Use `lf.sink_csv(path)` directly on the LazyFrame to keep memory usage low for datasets larger than RAM.",
+        "DO NOT assume `sink_csv()` respects a custom `separator` without also setting `quote_style` appropriately — if your data contains the separator character (e.g., semicolons in text fields when using `separator=';'`), fields may not be quoted as expected unless `quote_style` is explicitly configured, leading to malformed CSV output."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "LazyFrame.sink_csv",
+        "qualified_name": "polars.LazyFrame.sink_csv",
+        "polars_version": "1.40.1",
+        "signature": "(self, path: 'str | Path | IO[bytes] | IO[str] | PartitionBy', *, include_bom: 'bool' = False, compression: \"Literal['uncompressed', 'gzip', 'zstd']\" = 'uncompressed', compression_level: 'int | None' = None, check_extension: 'bool' = True, include_header: 'bool' = True, separator: 'str' = ',', line_terminator: 'str' = '\\n', quote_char: 'str' = '\"', batch_size: 'int' = 1024, datetime_format: 'str | None' = None, date_format: 'str | None' = None, time_format: 'str | None' = None, float_scientific: 'bool | None' = None, float_precision: 'int | None' = None, decimal_comma: 'bool' = False, null_value: 'str | None' = None, quote_style: 'CsvQuoteStyle | None' = None, maintain_order: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, sync_on_close: 'SyncOnCloseMethod | None' = None, mkdir: 'bool' = False, lazy: 'bool' = False, engine: 'EngineType' = 'auto', optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>) -> 'LazyFrame | None'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_lf_sink_parquet",
+      "title": "pl.LazyFrame.sink_parquet(self, path: 'str | Path | IO[bytes] | PartitionBy...",
+      "definition": "Evaluate the query in streaming mode and write to a Parquet file.\n\nThis allows streaming results that are larger than RAM to be written to disk.",
+      "key_facts": [
+        "Signature: polars.LazyFrame.sink_parquet(self, path: 'str | Path | IO[bytes] | PartitionBy', *, compression: 'str' = 'zstd', compression_level: 'int | None' = None, statistics: 'bool | str | dict[str, bool]' = True, row_group_size: 'int | None' = None, data_page_size: 'int | None' = None, maintain_order: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, sync_on_close: 'SyncOnCloseMethod | None' = None, metadata: 'ParquetMetadata | None' = None, arrow_schema: 'ArrowSchemaExportable | None' = None, mkdir: 'bool' = False, lazy: 'bool' = False, engine: 'EngineType' = 'auto', optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>, _sinked_paths_callback: 'SinkedPathsCallback | None' = None) -> 'LazyFrame | None'",
+        "Parameters:\npath\n    File path to which the file should be written.\ncompression : {'lz4', 'uncompressed', 'snappy', 'gzip', 'brotli', 'zstd'}\n    Choose \"zstd\" for good compression performance.\n    Choose \"lz4\" for fast compression/decompression.\n    Choose \"snappy\" for more backwards compatibility guarantees\n    when you deal with older parquet readers.\ncompression_level\n    The level of compression to use. Higher compression means smaller files on\n    disk.\n\n    - \"gzip\" : min-level: 0, max-level: 9, defa"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.LazyFrame.sink_parquet",
+          "solution_steps": [
+            "Call polars.LazyFrame.sink_parquet(self, path: 'str | Path | IO[bytes] | PartitionBy', *, compression: 'str' = 'zstd', compression_level: 'int | None' = None, statistics: 'bool | str | dict[str, bool]' = True, row_group_size: 'int | None' = None, data_page_size: 'int | None' = None, maintain_order: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, sync_on_close: 'SyncOnCloseMethod | None' = None, metadata: 'ParquetMetadata | None' = None, arrow_schema: 'ArrowSchemaExportable | None' = None, mkdir: 'bool' = False, lazy: 'bool' = False, engine: 'EngineType' = 'auto', optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>, _sinked_paths_callback: 'SinkedPathsCallback | None' = None) -> 'LazyFrame | None'"
+          ],
+          "final_answer": "# See signature: polars.LazyFrame.sink_parquet(self, path: 'str | Path | IO[bytes] | PartitionBy', *, compression: 'str' = 'zstd', compression_lev",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "Read a large CSV file, filter rows where sales > 1000, select only 'date', 'region', and 'sales' columns, and write the result to a compressed Parquet file using streaming to avoid loading the full dataset into RAM.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\n\nresult = (\n    pl.scan_csv('large_sales_data.csv')\n    .filter(pl.col('sales') > 1000)\n    .select(['date', 'region', 'sales'])\n    .sink_parquet(\n        'filtered_sales.parquet',\n        compression='zstd',\n        compression_level=6,\n        statistics=True,\n        maintain_order=True\n    )\n)\n# sink_parquet returns None by default (lazy=False), meaning the query\n# has already been executed and the file written upon completion.",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT treat sink_parquet like write_parquet on a collected DataFrame — it operates on a LazyFrame in streaming mode and does NOT return a DataFrame; calling .collect() before sink_parquet defeats the purpose and loads everything into RAM, negating the ability to process datasets larger than available memory.",
+        "DO NOT assume the output file is immediately flushed/synced to disk after sink_parquet returns when using cloud or networked storage — use sync_on_close='data' or sync_on_close='all' explicitly if durability guarantees are required, otherwise partial writes may occur on crash."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "LazyFrame.sink_parquet",
+        "qualified_name": "polars.LazyFrame.sink_parquet",
+        "polars_version": "1.40.1",
+        "signature": "(self, path: 'str | Path | IO[bytes] | PartitionBy', *, compression: 'str' = 'zstd', compression_level: 'int | None' = None, statistics: 'bool | str | dict[str, bool]' = True, row_group_size: 'int | None' = None, data_page_size: 'int | None' = None, maintain_order: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, sync_on_close: 'SyncOnCloseMethod | None' = None, metadata: 'ParquetMetadata | None' = None, arrow_schema: 'ArrowSchemaExportable | None' = None, mkdir: 'bool' = False, lazy: 'bool' = False, engine: 'EngineType' = 'auto', optimizations: 'QueryOptFlags' = <polars.lazyframe.opt_flags.QueryOptFlags object at 0x7fa1e564f0d0>, _sinked_paths_callback: 'SinkedPathsCallback | None' = None) -> 'LazyFrame | None'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_list_eval",
+      "title": "pl.Expr.list.eval(self, expr: 'Expr', *, parallel: 'bool' = False) ...",
+      "definition": "Run any polars expression against the lists' elements.",
+      "key_facts": [
+        "Signature: polars.Expr.list.eval(self, expr: 'Expr', *, parallel: 'bool' = False) -> 'Expr'",
+        "Parameters:\nexpr\n    Expression to run. Note that you can select an element with `pl.element()`.\nparallel\n    Run all expression parallel. Don't activate this blindly.\n    Parallelism is worth it if there is enough work to do per thread.\n\n    This likely should not be used in the group by context, because we already\n    parallel execution per group"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.list.eval",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"a\": [1, 8, 3], \"b\": [4, 5, 2]})",
+          "key_insight": "Standard usage pattern for polars.Expr.list.eval."
+        },
+        {
+          "problem": "Example usage of polars.Expr.list.eval",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\nrank=pl.concat_list(\"a\", \"b\").list.eval(pl.element().rank())\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.list.eval."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use column references (e.g., pl.col('x')) inside list.eval — the expression runs in a 'list element' context where only pl.element() refers to the current list item; using pl.col() will raise an error or produce unexpected results because there are no named columns inside a list.",
+        "DO NOT blindly enable parallel=True in a group_by context — Polars already parallelizes across groups, so adding parallelism inside list.eval will cause thread contention and likely degrade performance rather than improve it."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.list.eval",
+        "qualified_name": "polars.Expr.list.eval",
+        "polars_version": "1.40.1",
+        "signature": "(self, expr: 'Expr', *, parallel: 'bool' = False) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_list_len",
+      "title": "pl.Expr.list.len(self) -> 'Expr'",
+      "definition": "Return the number of elements in each list.\n\nNull values count towards the total.",
+      "key_facts": [
+        "Signature: polars.Expr.list.len(self) -> 'Expr'",
+        "Returns: Expr\n    Expression of data type :class:`UInt32`."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.list.len",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"a\": [[1, 2, None], [5]]})",
+          "key_insight": "Standard usage pattern for polars.Expr.list.len."
+        },
+        {
+          "problem": "Example usage of polars.Expr.list.len",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(len=pl.col(\"a\").list.len())",
+          "key_insight": "Standard usage pattern for polars.Expr.list.len."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT confuse list.len() with list.n_unique() — list.len() counts ALL elements including nulls and duplicates, so [1, 1, None] returns 3, not 2. If you want distinct non-null counts, use list.n_unique() instead.",
+        "DO NOT expect list.len() to return an Int64 or Python int type — it always returns UInt32, which can cause type mismatch errors if you try to compare or join it against a column of a different integer type without explicit casting."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.list.len",
+        "qualified_name": "polars.Expr.list.len",
+        "polars_version": "1.40.1",
+        "signature": "(self) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_lit",
+      "title": "pl.lit(value: 'Any', dtype: 'PolarsDataType | DataTypeEx...",
+      "definition": "Return an expression representing a literal value.",
+      "key_facts": [
+        "Signature: polars.lit(value: 'Any', dtype: 'PolarsDataType | DataTypeExpr | None' = None, *, allow_object: 'bool' = False) -> 'Expr'",
+        "Parameters:\nvalue\n    Value that should be used as a `literal`.\ndtype\n    The data type of the resulting expression.\n    If set to `None` (default), the data type is inferred from the `value` input.\nallow_object\n    If type is unknown use an 'object' type.\n    By default, we will raise a `ValueException`\n    if the type is unknown."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.lit",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "pl.lit(1)  # doctest: +IGNORE_RESULT",
+          "key_insight": "Standard usage pattern for polars.lit."
+        },
+        {
+          "problem": "Example usage of polars.lit",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "pl.lit(5.5)  # doctest: +IGNORE_RESULT",
+          "key_insight": "Standard usage pattern for polars.lit."
+        },
+        {
+          "problem": "Example usage of polars.lit",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "pl.lit(None)  # doctest: +IGNORE_RESULT",
+          "key_insight": "Standard usage pattern for polars.lit."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT pass a plain Python list expecting it to broadcast like a scalar — pl.lit([1, 2, 3]) creates a single List<i64> literal (one cell), not a column of three integers. Use pl.Series([1, 2, 3]) wrapped in pl.lit() if you need a Series, or pl.col() if you want to reference an existing column.",
+        "DO NOT rely on automatic dtype inference when precision matters — pl.lit(1) infers Int32 and pl.lit(1.0) infers Float64, which can cause silent casting errors or schema mismatches when concatenating or joining DataFrames. Always specify dtype explicitly, e.g., pl.lit(1, dtype=pl.Int64), to guarantee the expected type."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "pl.lit",
+        "qualified_name": "polars.lit",
+        "polars_version": "1.40.1",
+        "signature": "(value: 'Any', dtype: 'PolarsDataType | DataTypeExpr | None' = None, *, allow_object: 'bool' = False) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_rank",
+      "title": "pl.Expr.rank(self, method: 'RankMethod' = 'average', *, descen...",
+      "definition": "Assign ranks to data, dealing with ties appropriately.",
+      "key_facts": [
+        "Signature: polars.Expr.rank(self, method: 'RankMethod' = 'average', *, descending: 'bool' = False, seed: 'int | None' = None) -> 'Expr'",
+        "Parameters:\nmethod : {'average', 'min', 'max', 'dense', 'ordinal', 'random'}\n    The method used to assign ranks to tied elements.\n    The following methods are available (default is 'average'):\n\n    - 'average' : The average of the ranks that would have been assigned to\n      all the tied values is assigned to each value.\n    - 'min' : The minimum of the ranks that would have been assigned to all\n      the tied values is assigned to each value. (This is also referred to\n      as \"competition\" ranking.)\n   "
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.rank",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"a\": [3, 6, 1, 1, 6]})",
+          "key_insight": "Standard usage pattern for polars.Expr.rank."
+        },
+        {
+          "problem": "Example usage of polars.Expr.rank",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.select(pl.col(\"a\").rank())",
+          "key_insight": "Standard usage pattern for polars.Expr.rank."
+        },
+        {
+          "problem": "Example usage of polars.Expr.rank",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"a\": [3, 6, 1, 1, 6]})",
+          "key_insight": "Standard usage pattern for polars.Expr.rank."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT assume that 'average' rank returns integer values for tied elements — it returns Float64 (e.g., two tied elements at ranks 2 and 3 both get 2.5), while methods like 'min', 'max', 'dense', and 'ordinal' return UInt32. Mixing these in downstream integer operations without casting will cause type errors.",
+        "DO NOT expect deterministic results when using method='random' without explicitly setting the `seed` parameter — omitting `seed` means results will differ across runs, making tests and reproducible pipelines silently non-deterministic."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.rank",
+        "qualified_name": "polars.Expr.rank",
+        "polars_version": "1.40.1",
+        "signature": "(self, method: 'RankMethod' = 'average', *, descending: 'bool' = False, seed: 'int | None' = None) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_scan_csv",
+      "title": "pl.scan_csv(source: 'str | Path | IO[str] | IO[bytes] | bytes...",
+      "definition": "Lazily read from a CSV file or multiple files via glob patterns.\n\nThis allows the query optimizer to push down predicates and\nprojections to the scan level, thereby potentially reducing\nmemory overhead.\n\n.. versionchanged:: 0.20.31\n    The `dtypes` parameter was renamed `schema_overrides`.\n.. versionchanged:: 0.20.4\n    * The `row_count_name` parameter was renamed `row_index_name`.\n    * The `row_count_offset` parameter was renamed `row_index_offset`.",
+      "key_facts": [
+        "Signature: polars.scan_csv(source: 'str | Path | IO[str] | IO[bytes] | bytes | list[str] | list[Path] | list[IO[str]] | list[IO[bytes]] | list[bytes]', *, has_header: 'bool' = True, separator: 'str' = ',', comment_prefix: 'str | None' = None, quote_char: 'str | None' = '\"', skip_rows: 'int' = 0, skip_lines: 'int' = 0, schema: 'SchemaDict | None' = None, schema_overrides: 'SchemaDict | Sequence[PolarsDataType] | None' = None, null_values: 'str | Sequence[str] | dict[str, str] | None' = None, missing_utf8_is_empty_string: 'bool' = False, ignore_errors: 'bool' = False, cache: 'bool | None' = None, with_column_names: 'Callable[[list[str]], list[str]] | None' = None, infer_schema: 'bool' = True, infer_schema_length: 'int | None' = 100, n_rows: 'int | None' = None, encoding: 'CsvEncoding' = 'utf8', low_memory: 'bool' = False, rechunk: 'bool' = False, skip_rows_after_header: 'int' = 0, row_index_name: 'str | None' = None, row_index_offset: 'int' = 0, try_parse_dates: 'bool' = False, eol_char: 'str' = '\\n', new_columns: 'Sequence[str] | None' = None, raise_if_empty: 'bool' = True, truncate_ragged_lines: 'bool' = False, decimal_comma: 'bool' = False, glob: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, file_cache_ttl: 'int | None' = None, include_file_paths: 'str | None' = None, missing_columns: \"Literal['insert', 'raise'] | None\" = None) -> 'LazyFrame'",
+        "Parameters:\nsource\n    Path(s) to a file or directory\n    When needing to authenticate for scanning cloud locations, see the\n    `storage_options` parameter.\nhas_header\n    Indicate if the first row of the dataset is a header or not. If set to False,\n    column names will be autogenerated in the following format: `column_x`, with\n    `x` being an enumeration over every column in the dataset, starting at 1.\nseparator\n    Single byte character to use as separator in the file.\ncomment_prefix\n    A string used "
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.scan_csv",
+          "solution_steps": [
+            "Call polars.scan_csv(source: 'str | Path | IO[str] | IO[bytes] | bytes | list[str] | list[Path] | list[IO[str]] | list[IO[bytes]] | list[bytes]', *, has_header: 'bool' = True, separator: 'str' = ',', comment_prefix: 'str | None' = None, quote_char: 'str | None' = '\"', skip_rows: 'int' = 0, skip_lines: 'int' = 0, schema: 'SchemaDict | None' = None, schema_overrides: 'SchemaDict | Sequence[PolarsDataType] | None' = None, null_values: 'str | Sequence[str] | dict[str, str] | None' = None, missing_utf8_is_empty_string: 'bool' = False, ignore_errors: 'bool' = False, cache: 'bool | None' = None, with_column_names: 'Callable[[list[str]], list[str]] | None' = None, infer_schema: 'bool' = True, infer_schema_length: 'int | None' = 100, n_rows: 'int | None' = None, encoding: 'CsvEncoding' = 'utf8', low_memory: 'bool' = False, rechunk: 'bool' = False, skip_rows_after_header: 'int' = 0, row_index_name: 'str | None' = None, row_index_offset: 'int' = 0, try_parse_dates: 'bool' = False, eol_char: 'str' = '\\n', new_columns: 'Sequence[str] | None' = None, raise_if_empty: 'bool' = True, truncate_ragged_lines: 'bool' = False, decimal_comma: 'bool' = False, glob: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, file_cache_ttl: 'int | None' = None, include_file_paths: 'str | None' = None, missing_columns: \"Literal['insert', 'raise'] | None\" = None) -> 'LazyFrame'"
+          ],
+          "final_answer": "# See signature: polars.scan_csv(source: 'str | Path | IO[str] | IO[bytes] | bytes | list[str] | list[Path] | list[IO[str]] | list[I",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "Scan a CSV file that uses semicolons as delimiters, has 'NA' and 'NULL' as null markers, and contains a date column that should be parsed automatically. Filter to only rows where the 'sales' column exceeds 1000 before collecting, and add a row index starting at 1.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\n\nlf = pl.scan_csv(\n    'sales_data.csv',\n    separator=';',\n    null_values=['NA', 'NULL'],\n    try_parse_dates=True,\n    row_index_name='row_id',\n    row_index_offset=1,\n)\n\nresult = (\n    lf\n    .filter(pl.col('sales') > 1000)\n    .select(['row_id', 'date', 'sales', 'region'])\n    .collect()\n)\n\nprint(result)",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT rely on infer_schema_length being large enough to catch all type variations — by default only the first 100 rows are sampled, so a column with integers in rows 1-100 but strings in row 101 will silently cause errors or null values at collect time. Always use schema_overrides (e.g., schema_overrides={'col': pl.Utf8}) or set infer_schema_length=None to scan the entire file when data types are inconsistent.",
+        "DO NOT assume scan_csv immediately validates or reads the file — it returns a LazyFrame and no I/O occurs until .collect() is called. This means file-not-found errors, malformed CSVs, or schema mismatches will only surface at collect time, not at the scan_csv call, which can make debugging confusing if you treat it like pandas read_csv."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "pl.scan_csv",
+        "qualified_name": "polars.scan_csv",
+        "polars_version": "1.40.1",
+        "signature": "(source: 'str | Path | IO[str] | IO[bytes] | bytes | list[str] | list[Path] | list[IO[str]] | list[IO[bytes]] | list[bytes]', *, has_header: 'bool' = True, separator: 'str' = ',', comment_prefix: 'str | None' = None, quote_char: 'str | None' = '\"', skip_rows: 'int' = 0, skip_lines: 'int' = 0, schema: 'SchemaDict | None' = None, schema_overrides: 'SchemaDict | Sequence[PolarsDataType] | None' = None, null_values: 'str | Sequence[str] | dict[str, str] | None' = None, missing_utf8_is_empty_string: 'bool' = False, ignore_errors: 'bool' = False, cache: 'bool | None' = None, with_column_names: 'Callable[[list[str]], list[str]] | None' = None, infer_schema: 'bool' = True, infer_schema_length: 'int | None' = 100, n_rows: 'int | None' = None, encoding: 'CsvEncoding' = 'utf8', low_memory: 'bool' = False, rechunk: 'bool' = False, skip_rows_after_header: 'int' = 0, row_index_name: 'str | None' = None, row_index_offset: 'int' = 0, try_parse_dates: 'bool' = False, eol_char: 'str' = '\\n', new_columns: 'Sequence[str] | None' = None, raise_if_empty: 'bool' = True, truncate_ragged_lines: 'bool' = False, decimal_comma: 'bool' = False, glob: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, file_cache_ttl: 'int | None' = None, include_file_paths: 'str | None' = None, missing_columns: \"Literal['insert', 'raise'] | None\" = None) -> 'LazyFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_scan_ndjson",
+      "title": "pl.scan_ndjson(source: 'str | Path | IO[str] | IO[bytes] | bytes...",
+      "definition": "Lazily read from a newline delimited JSON file or multiple files via glob patterns.\n\nThis allows the query optimizer to push down predicates and projections to the scan\nlevel, thereby potentially reducing memory overhead.\n\n.. versionchanged:: 0.20.4\n    * The `row_count_name` parameter was renamed `row_index_name`.\n    * The `row_count_offset` parameter was renamed `row_index_offset`.",
+      "key_facts": [
+        "Signature: polars.scan_ndjson(source: 'str | Path | IO[str] | IO[bytes] | bytes | list[str] | list[Path] | list[IO[str]] | list[IO[bytes]]', *, schema: 'SchemaDefinition | None' = None, schema_overrides: 'SchemaDefinition | None' = None, infer_schema_length: 'int | None' = 100, batch_size: 'int | None' = 1024, n_rows: 'int | None' = None, low_memory: 'bool' = False, rechunk: 'bool' = False, row_index_name: 'str | None' = None, row_index_offset: 'int' = 0, ignore_errors: 'bool' = False, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, file_cache_ttl: 'int | None' = None, include_file_paths: 'str | None' = None) -> 'LazyFrame'",
+        "Parameters:\nsource\n    Path to a file.\nschema : Sequence of str, (str,DataType) pairs, or a {str:DataType,} dict\n    The DataFrame schema may be declared in several ways:\n\n    * As a dict of {name:type} pairs; if type is None, it will be auto-inferred.\n    * As a list of column names; in this case types are automatically inferred.\n    * As a list of (name,type) pairs; this is equivalent to the dictionary form.\n\n    If you supply a list of column names that does not match the names in the\n    underlying data"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.scan_ndjson",
+          "solution_steps": [
+            "Call polars.scan_ndjson(source: 'str | Path | IO[str] | IO[bytes] | bytes | list[str] | list[Path] | list[IO[str]] | list[IO[bytes]]', *, schema: 'SchemaDefinition | None' = None, schema_overrides: 'SchemaDefinition | None' = None, infer_schema_length: 'int | None' = 100, batch_size: 'int | None' = 1024, n_rows: 'int | None' = None, low_memory: 'bool' = False, rechunk: 'bool' = False, row_index_name: 'str | None' = None, row_index_offset: 'int' = 0, ignore_errors: 'bool' = False, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, file_cache_ttl: 'int | None' = None, include_file_paths: 'str | None' = None) -> 'LazyFrame'"
+          ],
+          "final_answer": "# See signature: polars.scan_ndjson(source: 'str | Path | IO[str] | IO[bytes] | bytes | list[str] | list[Path] | list[IO[str]] | list[I",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "You have a large NDJSON log file `events.ndjson` where each line looks like `{\"user_id\": 42, \"event\": \"click\", \"timestamp\": \"2024-01-15T10:00:00\"}`. You want to lazily scan only rows where `event == 'purchase'`, select just `user_id` and `timestamp`, and add a row index starting at 1 — without loading the full file into memory.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\n\nlf = pl.scan_ndjson(\n    'events.ndjson',\n    infer_schema_length=200,  # inspect more rows for reliable schema inference\n    row_index_name='row_nr',\n    row_index_offset=1,\n)\n\nresult = (\n    lf\n    .filter(pl.col('event') == 'purchase')\n    .select(['row_nr', 'user_id', 'timestamp'])\n    .collect()\n)\n\nprint(result)\n# shape: (n, 3)\n# ┌────────┬─────────┬─────────────────────┐\n# │ row_nr ┆ user_id ┆ timestamp           │\n# │ ---    ┆ ---     ┆ ---                 │\n# │ u32    ┆ i64     ┆ str                 │\n# ╞════════╪═════════╪═════════════════════╡\n# │ 3      ┆ 99      ┆ 2024-01-15T11:30:00 │\n# └────────┴─────────┴─────────────────────┘",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT assume schema inference is accurate with the default `infer_schema_length=100` when your NDJSON file has rare or late-appearing fields/types — rows beyond the first 100 lines may have different types or nullable fields that cause runtime errors or silent type coercions. Always increase `infer_schema_length` or explicitly pass `schema`/`schema_overrides` for production pipelines.",
+        "DO NOT call `.collect()` immediately after `scan_ndjson` without applying any filter or select first when working with large files — this defeats the purpose of lazy evaluation and the query optimizer's predicate/projection pushdown. Always chain `.filter()` or `.select()` before `.collect()` to let Polars minimize I/O and memory usage."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "pl.scan_ndjson",
+        "qualified_name": "polars.scan_ndjson",
+        "polars_version": "1.40.1",
+        "signature": "(source: 'str | Path | IO[str] | IO[bytes] | bytes | list[str] | list[Path] | list[IO[str]] | list[IO[bytes]]', *, schema: 'SchemaDefinition | None' = None, schema_overrides: 'SchemaDefinition | None' = None, infer_schema_length: 'int | None' = 100, batch_size: 'int | None' = 1024, n_rows: 'int | None' = None, low_memory: 'bool' = False, rechunk: 'bool' = False, row_index_name: 'str | None' = None, row_index_offset: 'int' = 0, ignore_errors: 'bool' = False, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, file_cache_ttl: 'int | None' = None, include_file_paths: 'str | None' = None) -> 'LazyFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_scan_parquet",
+      "title": "pl.scan_parquet(source: 'FileSource', *, n_rows: 'int | None' = N...",
+      "definition": "Lazily read from a local or cloud-hosted parquet file (or files).\n\nThis function allows the query optimizer to push down predicates and projections to\nthe scan level, typically increasing performance and reducing memory overhead.\n\n.. versionchanged:: 0.20.4\n    * The `row_count_name` parameter was renamed `row_index_name`.\n    * The `row_count_offset` parameter was renamed `row_index_offset`.\n\n.. versionchanged:: 1.30.0\n    * The `allow_missing_columns` is deprecated in favor of `missing_columns`.",
+      "key_facts": [
+        "Signature: polars.scan_parquet(source: 'FileSource', *, n_rows: 'int | None' = None, row_index_name: 'str | None' = None, row_index_offset: 'int' = 0, parallel: 'ParallelStrategy' = 'auto', use_statistics: 'bool' = True, hive_partitioning: 'bool | None' = None, glob: 'bool' = True, hidden_file_prefix: 'str | Sequence[str] | None' = None, schema: 'SchemaDict | None' = None, hive_schema: 'SchemaDict | None' = None, try_parse_hive_dates: 'bool' = True, rechunk: 'bool' = False, low_memory: 'bool' = False, cache: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, include_file_paths: 'str | None' = None, missing_columns: \"Literal['insert', 'raise']\" = 'raise', allow_missing_columns: 'bool | None' = None, extra_columns: \"Literal['ignore', 'raise']\" = 'raise', cast_options: 'ScanCastOptions | None' = None, _column_mapping: 'ColumnMapping | None' = None, _default_values: 'DefaultFieldValues | None' = None, _deletion_files: 'DeletionFiles | None' = None, _table_statistics: 'DataFrame | None' = None, _row_count: 'tuple[int, int] | None' = None) -> 'LazyFrame'",
+        "Parameters:\nsource\n    Path(s) to a file or directory\n    When needing to authenticate for scanning cloud locations, see the\n    `storage_options` parameter.\nn_rows\n    Stop reading from parquet file after reading `n_rows`.\nrow_index_name\n    If not None, this will insert a row index column with the given name into the\n    DataFrame\nrow_index_offset\n    Offset to start the row index column (only used if the name is set)\nparallel : {'auto', 'columns', 'row_groups', 'prefiltered', 'none'}\n    This determines "
+      ],
+      "worked_examples": [
+        {
+          "problem": "Use polars.scan_parquet",
+          "solution_steps": [
+            "Call polars.scan_parquet(source: 'FileSource', *, n_rows: 'int | None' = None, row_index_name: 'str | None' = None, row_index_offset: 'int' = 0, parallel: 'ParallelStrategy' = 'auto', use_statistics: 'bool' = True, hive_partitioning: 'bool | None' = None, glob: 'bool' = True, hidden_file_prefix: 'str | Sequence[str] | None' = None, schema: 'SchemaDict | None' = None, hive_schema: 'SchemaDict | None' = None, try_parse_hive_dates: 'bool' = True, rechunk: 'bool' = False, low_memory: 'bool' = False, cache: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, include_file_paths: 'str | None' = None, missing_columns: \"Literal['insert', 'raise']\" = 'raise', allow_missing_columns: 'bool | None' = None, extra_columns: \"Literal['ignore', 'raise']\" = 'raise', cast_options: 'ScanCastOptions | None' = None, _column_mapping: 'ColumnMapping | None' = None, _default_values: 'DefaultFieldValues | None' = None, _deletion_files: 'DeletionFiles | None' = None, _table_statistics: 'DataFrame | None' = None, _row_count: 'tuple[int, int] | None' = None) -> 'LazyFrame'"
+          ],
+          "final_answer": "# See signature: polars.scan_parquet(source: 'FileSource', *, n_rows: 'int | None' = None, row_index_name: 'str | None' = None, row_inde",
+          "key_insight": "Refer to signature for parameter details."
+        },
+        {
+          "problem": "Scan a directory of Hive-partitioned parquet files (e.g., partitioned by 'year' and 'country'), filter to only rows where year=2023 and country='US', select specific columns, and collect the result — demonstrating predicate pushdown and Hive partition pruning.",
+          "solution_steps": [
+            "Apply API"
+          ],
+          "final_answer": "import polars as pl\n\n# Directory structure example:\n# data/year=2023/country=US/part0.parquet\n# data/year=2023/country=FR/part0.parquet\n# data/year=2022/country=US/part0.parquet\n\nlf = pl.scan_parquet(\n    'data/**/*.parquet',\n    hive_partitioning=True,       # automatically parse year/country from paths\n    hive_schema={'year': pl.Int32, 'country': pl.Utf8},  # explicit types for partition columns\n    missing_columns='insert',     # insert nulls if a file lacks a column\n)\n\nresult = (\n    lf\n    .filter(\n        (pl.col('year') == 2023) &\n        (pl.col('country') == 'US')\n    )\n    .select(['sale_id', 'revenue', 'year', 'country'])\n    .collect()\n)\n\nprint(result)",
+          "key_insight": ""
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use `allow_missing_columns=True` in Polars 1.30+; it is deprecated. Use `missing_columns='insert'` instead. Using the old parameter will raise a deprecation warning and may break in future versions.",
+        "DO NOT assume `scan_parquet` eagerly reads data like `read_parquet` — it returns a LazyFrame. Calling operations like `.shape` or indexing directly (e.g., `lf[0]`) will raise errors or force a full collect. Always call `.collect()` or chain lazy operations before expecting materialized results."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "pl.scan_parquet",
+        "qualified_name": "polars.scan_parquet",
+        "polars_version": "1.40.1",
+        "signature": "(source: 'FileSource', *, n_rows: 'int | None' = None, row_index_name: 'str | None' = None, row_index_offset: 'int' = 0, parallel: 'ParallelStrategy' = 'auto', use_statistics: 'bool' = True, hive_partitioning: 'bool | None' = None, glob: 'bool' = True, hidden_file_prefix: 'str | Sequence[str] | None' = None, schema: 'SchemaDict | None' = None, hive_schema: 'SchemaDict | None' = None, try_parse_hive_dates: 'bool' = True, rechunk: 'bool' = False, low_memory: 'bool' = False, cache: 'bool' = True, storage_options: 'StorageOptionsDict | None' = None, credential_provider: \"CredentialProviderFunction | Literal['auto'] | None\" = 'auto', retries: 'int | None' = None, include_file_paths: 'str | None' = None, missing_columns: \"Literal['insert', 'raise']\" = 'raise', allow_missing_columns: 'bool | None' = None, extra_columns: \"Literal['ignore', 'raise']\" = 'raise', cast_options: 'ScanCastOptions | None' = None, _column_mapping: 'ColumnMapping | None' = None, _default_values: 'DefaultFieldValues | None' = None, _deletion_files: 'DeletionFiles | None' = None, _table_statistics: 'DataFrame | None' = None, _row_count: 'tuple[int, int] | None' = None) -> 'LazyFrame'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_str_contains",
+      "title": "pl.Expr.str.contains(self, pattern: 'str | Expr', *, literal: 'bool' =...",
+      "definition": "Check if the string contains a substring that matches a pattern.",
+      "key_facts": [
+        "Signature: polars.Expr.str.contains(self, pattern: 'str | Expr', *, literal: 'bool' = False, strict: 'bool' = True) -> 'Expr'",
+        "Parameters:\npattern\n    A valid regular expression pattern, compatible with the `regex crate\n    <https://docs.rs/regex/latest/regex/>`_.\nliteral\n    Treat `pattern` as a literal string, not as a regular expression.\nstrict\n    Raise an error if the underlying pattern is not a valid regex,\n    otherwise mask out with a null value."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.str.contains",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "pl.DataFrame({\"s\": [\"AAA\", \"aAa\", \"aaa\"]}).with_columns(\ndefault_match=pl.col(\"s\").str.contains(\"AA\"),\ninsensitive_match=pl.col(\"s\").str.contains(\"(?i)AA\"),\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.str.contains."
+        },
+        {
+          "problem": "Example usage of polars.Expr.str.contains",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"txt\": [\"Crab\", \"cat and dog\", \"rab$bit\", None]})",
+          "key_insight": "Standard usage pattern for polars.Expr.str.contains."
+        },
+        {
+          "problem": "Example usage of polars.Expr.str.contains",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.select(\npl.col(\"txt\"),\npl.col(\"txt\").str.contains(\"cat|bit\").alias(\"regex\"),\npl.col(\"txt\").str.contains(\"rab$\", literal=True).alias(\"literal\"),\n)\n(truncated)",
+          "key_insight": "Standard usage pattern for polars.Expr.str.contains."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pandas-style str.contains with regex=False; in Polars you must use the `literal=True` keyword argument instead. For example, use `pl.col('s').str.contains('a.b', literal=True)` to match the literal string 'a.b' rather than the regex pattern 'a.b' which would match any character between a and b.",
+        "DO NOT assume invalid regex patterns will silently return null by default. With `strict=True` (the default), an invalid regex pattern raises a ComputeError at runtime. You must explicitly set `strict=False` if you want invalid patterns to produce null values instead of crashing your pipeline."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.str.contains",
+        "qualified_name": "polars.Expr.str.contains",
+        "polars_version": "1.40.1",
+        "signature": "(self, pattern: 'str | Expr', *, literal: 'bool' = False, strict: 'bool' = True) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_str_len_chars",
+      "title": "pl.Expr.str.len_chars(self) -> 'Expr'",
+      "definition": "Return the length of each string as the number of characters.",
+      "key_facts": [
+        "Signature: polars.Expr.str.len_chars(self) -> 'Expr'",
+        "Returns: Expr\n    Expression of data type :class:`UInt32`."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.str.len_chars",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"a\": [\"Café\", \"345\", \"東京\", None]})",
+          "key_insight": "Standard usage pattern for polars.Expr.str.len_chars."
+        },
+        {
+          "problem": "Example usage of polars.Expr.str.len_chars",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\npl.col(\"a\").str.len_chars().alias(\"n_chars\"),\npl.col(\"a\").str.len_bytes().alias(\"n_bytes\"),\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.str.len_chars."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT confuse len_chars with len_bytes for multi-byte Unicode characters. For example, the string '東京' has len_chars=2 but len_bytes=6, since each CJK character occupies 3 bytes. Using len_bytes when you need character count will give wrong results for any non-ASCII text.",
+        "DO NOT use len_chars on ASCII-only data when performance matters. Since len_chars runs in O(n) per string (it must scan each byte to count Unicode scalar values), while len_bytes runs in O(1), using len_chars on large ASCII datasets introduces unnecessary overhead. Always prefer len_bytes for pure ASCII workloads."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.str.len_chars",
+        "qualified_name": "polars.Expr.str.len_chars",
+        "polars_version": "1.40.1",
+        "signature": "(self) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_str_split",
+      "title": "pl.Expr.str.split(self, by: 'IntoExpr', *, inclusive: 'bool' = Fals...",
+      "definition": "Split the string by a substring.",
+      "key_facts": [
+        "Signature: polars.Expr.str.split(self, by: 'IntoExpr', *, inclusive: 'bool' = False, literal: 'bool' = True, strict: 'bool' = True) -> 'Expr'",
+        "Parameters:\nby\n    Substring to split by.\ninclusive\n    If True, include the split character/string in the results.\nliteral\n    Treat `by` as a literal string, not as a regular expression.\nstrict\n    Raise an error if the underlying pattern is not a valid regex,\n    otherwise mask out with a null value."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.str.split",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"s\": [\"foo bar\", \"foo_bar\", \"foo_bar_baz\"]})",
+          "key_insight": "Standard usage pattern for polars.Expr.str.split."
+        },
+        {
+          "problem": "Example usage of polars.Expr.str.split",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\npl.col(\"s\").str.split(by=\"_\").alias(\"split\"),\npl.col(\"s\").str.split(by=\"_\", inclusive=True).alias(\"split_inclusive\"),\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.str.split."
+        },
+        {
+          "problem": "Example usage of polars.Expr.str.split",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\"s\": [\"foo^bar\", \"foo_bar\", \"foo*bar*baz\"], \"by\": [\"_\", \"_\", \"*\"]}\n)",
+          "key_insight": "Standard usage pattern for polars.Expr.str.split."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT assume `literal=False` (regex mode) is the default — in Polars `str.split`, `literal=True` by default, meaning the `by` argument is treated as a plain string. If you pass a regex pattern like `r'\\s+'` without setting `literal=False`, it will be interpreted literally and likely produce unexpected results (e.g., no splits at all).",
+        "DO NOT expect `str.split` to return a flat Series of strings like Python's built-in `str.split` — it returns a column of type `List[String]`. Attempting to use the result directly as a scalar string column (e.g., indexing with `[0]`) without first calling `.list.get(0)` or `.explode()` will cause type errors or incorrect behavior."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.str.split",
+        "qualified_name": "polars.Expr.str.split",
+        "polars_version": "1.40.1",
+        "signature": "(self, by: 'IntoExpr', *, inclusive: 'bool' = False, literal: 'bool' = True, strict: 'bool' = True) -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_struct_field",
+      "title": "pl.Expr.struct.field(self, name: 'str | list[str]', *more_names: 'str'...",
+      "definition": "Retrieve one or multiple `Struct` field(s) as a new Series.",
+      "key_facts": [
+        "Signature: polars.Expr.struct.field(self, name: 'str | list[str]', *more_names: 'str') -> 'Expr'",
+        "Parameters:\nname\n    Name of the struct field to retrieve.\n*more_names\n    Additional struct field names."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.Expr.struct.field",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame(\n{\n\"aaa\": [1, 2],\n\"bbb\": [\"ab\", \"cd\"],\n\"ccc\": [True, None],\n\"ddd\": [[1, 2], [3]],\n}\n).select(pl.struct(\"aaa\", \"bbb\", \"ccc\", \"ddd\").alias(\"struct_col\"))",
+          "key_insight": "Standard usage pattern for polars.Expr.struct.field."
+        },
+        {
+          "problem": "Example usage of polars.Expr.struct.field",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df",
+          "key_insight": "Standard usage pattern for polars.Expr.struct.field."
+        },
+        {
+          "problem": "Example usage of polars.Expr.struct.field",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.select(pl.col(\"struct_col\").struct.field(\"bbb\"))",
+          "key_insight": "Standard usage pattern for polars.Expr.struct.field."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pandas-style bracket indexing (e.g., df['struct_col']['field_name']) to access struct fields in Polars — this will not work as expected. Always use .struct.field('field_name') within an expression context.",
+        "DO NOT assume that requesting a non-existent field name will raise an immediate, obvious error at expression build time. Polars may only raise the error at execution time (e.g., during .collect() or .select()), making it harder to catch early. Always verify field names exist in the struct schema beforehand using df.schema or .struct.fields."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "Expr.struct.field",
+        "qualified_name": "polars.Expr.struct.field",
+        "polars_version": "1.40.1",
+        "signature": "(self, name: 'str | list[str]', *more_names: 'str') -> 'Expr'",
+        "extracted_at": "2026-05-16"
+      }
+    },
+    {
+      "id": "polars_when",
+      "title": "pl.when(*predicates: 'IntoExprColumn | Iterable[IntoExprC...",
+      "definition": "Start a `when-then-otherwise` expression.\n\nAlways initiated by a `pl.when().then()`., and optionally followed by chaining one\nor more `.when().then()` statements.\n\nAn optional `.otherwise()` can be appended at the end. If not declared, a default\nof `.otherwise(None)` is used.\n\nSimilar to :func:`coalesce`, the value from the first condition that\nevaluates to True will be picked.\n\nIf all conditions are False, the `otherwise` value is picked.",
+      "key_facts": [
+        "Signature: polars.when(*predicates: 'IntoExprColumn | Iterable[IntoExprColumn] | bool', **constraints: 'Any') -> 'pl.When'",
+        "Parameters:\npredicates\n    Condition(s) that must be met in order to apply the subsequent statement.\n    Accepts one or more boolean expressions, which are implicitly combined with\n    `&`.\nconstraints\n    Apply conditions as `col_name = value` keyword arguments that are treated as\n    equality matches, such as `x = 123`. As with the predicates parameter, multiple\n    conditions are implicitly combined using `&`."
+      ],
+      "worked_examples": [
+        {
+          "problem": "Example usage of polars.when",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df = pl.DataFrame({\"foo\": [1, 3, 4], \"bar\": [3, 4, 0]})",
+          "key_insight": "Standard usage pattern for polars.when."
+        },
+        {
+          "problem": "Example usage of polars.when",
+          "solution_steps": [
+            "Apply the API as shown in the docstring."
+          ],
+          "final_answer": "df.with_columns(\npl.when(pl.col.foo > 2).then(1).otherwise(1 + pl.col.bar).alias(\"val\")\n)",
+          "key_insight": "Standard usage pattern for polars.when."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use Python if/else or pandas-style np.where() for conditional column logic; instead use pl.when().then().otherwise() which operates lazily on entire Series and is compatible with Polars' query optimizer. Using Python-level conditionals forces row-by-row evaluation and breaks lazy execution.",
+        "DO NOT forget that omitting .otherwise() silently defaults to .otherwise(None), filling unmatched rows with null. Always explicitly chain .otherwise() with a fallback value (e.g., pl.lit(0) or pl.col('default_col')) to avoid unexpected nulls propagating into downstream calculations."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [],
+      "confidence": 1.0,
+      "source": "python_introspection",
+      "last_verified": null,
+      "domain_metadata": {
+        "builder": "python_api_builder",
+        "api_name": "pl.when",
+        "qualified_name": "polars.when",
+        "polars_version": "1.40.1",
+        "signature": "(*predicates: 'IntoExprColumn | Iterable[IntoExprColumn] | bool', **constraints: 'Any') -> 'pl.When'",
+        "extracted_at": "2026-05-16"
+      }
+    }
+  ]
+}

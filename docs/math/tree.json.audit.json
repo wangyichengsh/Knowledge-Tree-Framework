@@ -1,0 +1,95 @@
+{
+  "audits": [
+    {
+      "status": "failed_json_parse",
+      "error_id": "E1",
+      "response_preview": "{\n  \"problem\": \"In triangle XYZ, the angle bisector from X meets YZ at point W, where YW = 6 and WZ = 10. If XY = 3t + 1 and XZ = 5t + 1, find t and the side lengths XY and XZ. Then verify the triangle inequality holds.\",\n  \"solution_steps\": [\n    \"Step 1: Apply the Angle Bisector Theorem: YW/WZ = X"
+    },
+    {
+      "status": "generated",
+      "error_id": "E2",
+      "node_id": "binomial_distribution",
+      "example_index": 1,
+      "original_problem": "A basketball player makes free throws with probability 0.72. In a game she attempts 11 free throws. Find the probability she makes at least 9, and compute the variance of her makes.",
+      "original_answer": "P(X >= 9) ≈ 0.5406; Var(X) ≈ 2.2176",
+      "new_problem": "A archer hits the bullseye with probability 0.65 on each independent shot. In a round she takes 10 shots. Find the probability she hits at least 8 bullseyes, and compute the variance of her hits.",
+      "new_answer": "P(X >= 8) ≈ 0.2614; Var(X) = 2.275",
+      "verify_result": {
+        "verified": true,
+        "confidence": 0.95
+      }
+    },
+    {
+      "status": "generated",
+      "error_id": "E3",
+      "node_id": "catalan_numbers",
+      "example_index": 2,
+      "original_problem": "How many sequences of +1 and -1, each of length 10 (five +1s and five -1s), have all partial sums strictly positive after the first term and equal to 0 at the end?",
+      "original_answer": "42",
+      "new_problem": "In how many ways can a sequence of 12 coin flips (6 heads and 6 tails) be arranged so that at every prefix of the sequence, the number of heads seen so far is greater than or equal to the number of tails seen so far?",
+      "new_answer": "132",
+      "verify_result": {
+        "verified": true,
+        "confidence": 0.95
+      }
+    },
+    {
+      "status": "generated",
+      "error_id": "E4",
+      "node_id": "counting_paths_in_grids",
+      "example_index": 2,
+      "original_problem": "On a 4x4 grid (from (0,0) to (4,4)), how many monotone paths stay strictly below the main diagonal (i.e., at every step, the number of R moves strictly exceeds the number of U moves)?",
+      "original_answer": "14",
+      "new_problem": "On a grid, how many monotone paths are there from (0,0) to (5,4) that stay weakly below the main diagonal (i.e., at every lattice point (x,y) visited, x ≥ y)?",
+      "new_answer": "42",
+      "verify_result": {
+        "verified": true,
+        "confidence": 0.95
+      }
+    },
+    {
+      "status": "generated",
+      "error_id": "E5",
+      "node_id": "extended_law_of_sines",
+      "example_index": 0,
+      "original_problem": "Triangle PQR has sides p = 7, q = 11, and angle P = 35°. Find the circumradius R and angle Q.",
+      "original_answer": "R ≈ 6.10, angle Q ≈ 64.3°",
+      "new_problem": "Triangle ABC has sides a = 9, b = 14, and angle A = 28°. Find the circumradius R and all valid measures of angle B.",
+      "new_answer": "R ≈ 9.59; two valid triangles exist: B ≈ 46.9° (with C ≈ 105.1°) or B ≈ 133.1° (with C ≈ 18.9°).",
+      "verify_result": {
+        "verified": true,
+        "confidence": 0.95
+      }
+    },
+    {
+      "status": "generated",
+      "error_id": "E6",
+      "node_id": "isosceles_tetrahedron_properties",
+      "example_index": 1,
+      "original_problem": "An isosceles tetrahedron has all four faces congruent with side lengths 6, 7, and 9 on each face. Find the circumradius of the tetrahedron.",
+      "original_answer": "R = sqrt(166)/2 ≈ 6.44",
+      "new_problem": "An isosceles tetrahedron has opposite edge pairs of lengths a=5, b=6, and c=7. Find the circumradius of the tetrahedron.",
+      "new_answer": "R = sqrt(55)/2 ≈ 3.708",
+      "verify_result": {
+        "verified": true,
+        "confidence": 0.95
+      }
+    },
+    {
+      "status": "generated",
+      "error_id": "E7",
+      "node_id": "sum_to_product_formulas",
+      "example_index": 2,
+      "original_problem": "Verify that (sin(5t) + sin(3t)) / cos(4t) = 2 * sin(4t) for all valid t.",
+      "original_answer": "(sin(5t) + sin(3t)) / cos(4t) = 2 * cos(t) * tan(4t)",
+      "new_problem": "Simplify (sin(5t) + sin(3t)) / cos(4t) using sum-to-product formulas.",
+      "new_answer": "2 * cos(t) * tan(4t)",
+      "verify_result": {
+        "verified": true,
+        "confidence": 0.95
+      }
+    }
+  ],
+  "success_count": 6,
+  "target_count": 7
+}

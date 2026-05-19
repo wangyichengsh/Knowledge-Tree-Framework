@@ -1,0 +1,1566 @@
+{
+  "version": "0.1.0",
+  "nodes": [
+    {
+      "id": "polars_arithmetic_and_compare",
+      "title": "Arithmetic and Comparison in Expressions",
+      "definition": "Polars Expression API supports natural arithmetic and comparison between column expressions. pl.col('a') + pl.col('b') creates a new column expression; comparisons (>, <, ==, !=) return boolean expressions used in filter/when.",
+      "key_facts": [
+        "Arithmetic: pl.col('a') + pl.col('b'), pl.col('x') * 2, pl.col('x') ** 2",
+        "Comparisons: pl.col('age') > 30, pl.col('name') == 'Alice'",
+        "Logical combinations: & (and), | (or), ~ (not) — use PARENTHESES",
+        "Result of arithmetic is an Expr — must be wrapped with .alias() in select/with_columns",
+        "Different from pandas: no eval(), no @-references, expressions are lazy"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Add two columns into a new 'total' column.",
+          "solution_steps": [
+            "Build expression: (pl.col('a') + pl.col('b')).alias('total')",
+            "Pass to with_columns"
+          ],
+          "final_answer": "result = df.with_columns((pl.col('a') + pl.col('b')).alias('total'))",
+          "key_insight": "Arithmetic between pl.col expressions composes naturally."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use df['a'] + df['b'] — that is pandas series; Polars uses pl.col.",
+        "DO NOT use df.eval('a + b') — Polars has no eval method.",
+        "Logical: use (cond1) & (cond2), NOT 'and' (Python keyword doesn't work on expressions)."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_with_columns",
+        "polars_filter_expression"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "pl.col + pl.col",
+          "pl.col > value"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_cast",
+      "title": "Expression.cast (Type Conversion)",
+      "definition": "Expression.cast(dtype, *, strict=True) converts a column expression to a different data type. Common dtypes: pl.Int64, pl.Float64, pl.Utf8 (string), pl.Date, pl.Datetime, pl.Boolean, pl.Categorical.",
+      "key_facts": [
+        "Signature: pl.col(...).cast(pl.Int64) — cast to a Polars dtype",
+        "strict=True (default) raises on invalid casts; False returns null",
+        "Used inside .with_columns() to modify column type in place",
+        "Different from pandas .astype() (which is on Series, not expression)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Cast 'value' column from Float64 to Int64.",
+          "solution_steps": [
+            "Build expression pl.col('value').cast(pl.Int64)",
+            "Use with_columns to apply the cast"
+          ],
+          "final_answer": "result = df.with_columns(pl.col('value').cast(pl.Int64))",
+          "key_insight": "cast is an expression method, used inside with_columns."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use .astype() — that is pandas; Polars uses .cast().",
+        "Cast inside .select() replaces the column; .with_columns() keeps others."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_with_columns"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          ".cast",
+          "pl.Int64",
+          "pl.Float64"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_collect",
+      "title": "LazyFrame.collect (Trigger Execution)",
+      "definition": "LazyFrame.collect(*, engine='auto'|'streaming'|'in-memory') executes the query plan and returns a DataFrame. In Polars 1.0+, engine='streaming' enables out-of-core execution for results larger than RAM.",
+      "key_facts": [
+        "Method on LazyFrame, returns DataFrame",
+        "engine='streaming' in 1.0+ replaces older streaming=True parameter",
+        "Without .collect() lazy operations do not execute"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Collect a LazyFrame with default in-memory engine.",
+          "solution_steps": [
+            "Build LazyFrame via scan_csv / LazyFrame / df.lazy()",
+            "Apply lazy ops (filter, select, with_columns)",
+            "Call .collect() to execute"
+          ],
+          "final_answer": "df = lf.filter(pl.col('age') > 30).collect()",
+          "key_insight": "collect() materializes the query plan into a DataFrame."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT pass `streaming=True` to .collect() in Polars 1.0+; use engine='streaming'.",
+        "Calling .collect() in a loop defeats lazy optimization."
+      ],
+      "parent_id": "polars_lazyframe",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_lazyframe",
+        "polars_scan_csv"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "lf.collect"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_complex_types",
+      "title": "Complex Types: List, Struct, Categorical Namespaces",
+      "definition": "Polars 1.0+ supports complex column types: List (array per row), Struct (named fields per row), Categorical (memory-efficient string). Each has its own namespace for operations: list.eval, list.len, struct.field, and Categorical via cast(pl.Categorical).",
+      "key_facts": [
+        "List ops: pl.col(x).list.eval(expr), .list.len(), .list.contains(val), .explode()",
+        "list.eval uses pl.element() to reference each list element inside the expr",
+        "Struct: pl.col(x).struct.field('name'), pl.col(x).struct.rename_fields(...)",
+        "Categorical: pl.col(x).cast(pl.Categorical) — memory-efficient string repr",
+        "Categorical has .cat namespace: .cat.get_categories(), .cat.set_ordering()"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Double each element inside a list column.",
+          "solution_steps": [
+            "Use pl.col('lst').list.eval(pl.element() * 2)",
+            "Inside list.eval, pl.element() references each list element"
+          ],
+          "final_answer": "result = df.with_columns(\n    pl.col('lst').list.eval(pl.element() * 2).alias('doubled')\n)",
+          "key_insight": "list.eval + pl.element() is the canonical way to map over list contents."
+        },
+        {
+          "problem": "Extract field 'x' from struct column 'data'.",
+          "solution_steps": [
+            "Use pl.col('data').struct.field('x')"
+          ],
+          "final_answer": "result = df.with_columns(pl.col('data').struct.field('x').alias('x_val'))",
+          "key_insight": "struct.field is the safe way to access struct fields (vs dict indexing)."
+        },
+        {
+          "problem": "Cast string column to Categorical for memory savings.",
+          "solution_steps": [
+            "Use pl.col('c').cast(pl.Categorical)"
+          ],
+          "final_answer": "result = df.with_columns(pl.col('c').cast(pl.Categorical))",
+          "key_insight": "Categorical dtype uses dictionary encoding; ideal for repeated strings."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use map_elements / apply over lists — use list.eval instead (faster).",
+        "DO NOT access struct fields with bracket [] — Polars uses .struct.field('name').",
+        "DO NOT use astype('category') — pandas style; Polars uses cast(pl.Categorical)."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_string_namespace"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          ".list.eval",
+          ".struct.field",
+          "pl.Categorical"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_cumulative_ops",
+      "title": "Cumulative Operations (cum_sum, cum_max, cum_min, cum_prod) — Polars 1.0+ Names",
+      "definition": "Polars 1.0+ renamed cumulative methods to snake_case: cum_sum, cum_max, cum_min, cum_prod, cum_count. Polars 0.x used cumsum, cummax (no underscore). These compute running aggregates over a column.",
+      "key_facts": [
+        "Polars 1.0+: cum_sum, cum_max, cum_min, cum_prod, cum_count (snake_case)",
+        "Polars 0.x (deprecated): cumsum, cummax, cummin (no underscore)",
+        ".cum_sum() returns expression of same length with running totals",
+        "Can combine with .over('group') for per-group cumulative",
+        "reverse=True parameter computes cumulative from end to start"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Compute cumulative sum of column 'x'.",
+          "solution_steps": [
+            "Build expression: pl.col('x').cum_sum().alias('cumulative')",
+            "Apply with with_columns"
+          ],
+          "final_answer": "result = df.with_columns(pl.col('x').cum_sum().alias('cumulative'))",
+          "key_insight": "cum_sum is the Polars 1.0+ canonical name; older cumsum is deprecated."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use .cumsum() — that is the deprecated Polars 0.x name.",
+        "DO NOT use np.cumsum() — Polars expressions are independent.",
+        "DO NOT use pandas .cumsum() — Polars uses cum_sum (with underscore)."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_window_functions"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "cum_sum",
+          "cum_max",
+          "cum_min"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_datetime_namespace",
+      "title": "Datetime Namespace (pl.col.dt.*)",
+      "definition": "Polars 1.0+ provides date/datetime operations via the `.dt` namespace: extract components (year, month, day, hour, etc.), truncate to time unit, offset by duration string, convert timezone, format as string.",
+      "key_facts": [
+        "pl.col('ts').dt.year() / .month() / .day() / .hour() / .minute() — components (Int)",
+        "pl.col('ts').dt.truncate('1mo') — round DOWN to time unit (e.g., '1mo', '1d', '1h')",
+        "pl.col('ts').dt.offset_by('1d') — add a duration",
+        "pl.col('ts').dt.weekday() — day of week (1-7 in Polars 1.0+, was 0-6 in 0.x)",
+        "Duration strings: 'ns', 'us', 'ms', 's', 'm', 'h', 'd', 'w', 'mo', 'q', 'y'"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Extract year and month from timestamp.",
+          "solution_steps": [
+            "Use pl.col('ts').dt.year().alias('year')",
+            "Use pl.col('ts').dt.month().alias('month')",
+            "Combine in with_columns"
+          ],
+          "final_answer": "result = df.with_columns(\n    pl.col('ts').dt.year().alias('year'),\n    pl.col('ts').dt.month().alias('month'),\n)",
+          "key_insight": "dt namespace extracts components without manual datetime parsing."
+        },
+        {
+          "problem": "Truncate timestamp to start of month.",
+          "solution_steps": [
+            "Use pl.col('ts').dt.truncate('1mo')"
+          ],
+          "final_answer": "result = df.with_columns(pl.col('ts').dt.truncate('1mo').alias('month_start'))",
+          "key_insight": "truncate rounds DOWN to the time unit boundary."
+        },
+        {
+          "problem": "Add 1 day to a timestamp.",
+          "solution_steps": [
+            "Use pl.col('ts').dt.offset_by('1d')"
+          ],
+          "final_answer": "result = df.with_columns(pl.col('ts').dt.offset_by('1d').alias('next_day'))",
+          "key_insight": "offset_by adds a duration string — clean alternative to manual timedelta."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pd.DatetimeIndex / pd.to_datetime — Polars has native datetime ops.",
+        "DO NOT use ts + timedelta(days=1) — Polars uses dt.offset_by('1d').",
+        "DO NOT use .dt.floor() — Polars uses .dt.truncate() for the same effect.",
+        "Polars weekday is 1-indexed in 1.0+ (Monday=1); was 0-indexed in 0.x."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_complex_types"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          ".dt.year",
+          ".dt.month",
+          ".dt.truncate",
+          ".dt.offset_by"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_dynamic_advanced",
+      "title": "group_by_dynamic Advanced Parameters (period, offset, closed)",
+      "definition": "Polars 1.0+ group_by_dynamic supports advanced time-window parameters beyond `every`: `period` controls window length (default = every), `offset` shifts window boundaries, `closed` controls boundary inclusivity. These enable overlapping or shifted time windows.",
+      "key_facts": [
+        "every: stride between window starts (e.g., '1d')",
+        "period: window length (default = every; period > every creates overlapping)",
+        "offset: shift window start (e.g., '12h' for half-day-shifted bins)",
+        "closed: 'left' (default), 'right', 'both', 'none' — boundary inclusion",
+        "Index column MUST be sorted; use df.sort('ts') first"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Overlapping 2-day windows every 1 day (rolling daily).",
+          "solution_steps": [
+            "df sorted by 'ts'",
+            "Call group_by_dynamic('ts', every='1d', period='2d')",
+            "Aggregate as needed"
+          ],
+          "final_answer": "result = df.sort('ts').group_by_dynamic(\n    'ts', every='1d', period='2d'\n).agg(pl.col('value').sum().alias('total'))",
+          "key_insight": "every < period creates overlapping windows for rolling-style time aggregation."
+        },
+        {
+          "problem": "Bins offset by 12 hours (custom day boundary).",
+          "solution_steps": [
+            "Use every='1d' and offset='12h'",
+            "Bins now start at noon, not midnight"
+          ],
+          "final_answer": "result = df.sort('ts').group_by_dynamic(\n    'ts', every='1d', offset='12h'\n).agg(pl.col('value').sum())",
+          "key_insight": "offset shifts bin boundaries — useful for business-day boundaries."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use groupby_dynamic — that's deprecated 0.x; use group_by_dynamic.",
+        "Failing to sort by index column produces incorrect grouping silently.",
+        "period < every creates GAPS in coverage (some rows skipped).",
+        "DO NOT use pandas resample/rolling — Polars has its own time-aware grouping."
+      ],
+      "parent_id": "polars_group_by_dynamic",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_group_by_dynamic",
+        "polars_group_by"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "group_by_dynamic",
+          "period=",
+          "offset=",
+          "closed="
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_expression_api",
+      "title": "Polars Expression API (pl.col, alias, etc.)",
+      "definition": "Polars expressions are composable, lazy descriptions of column-level computations. pl.col('name') references a column; chained methods like .mean(), .alias('new_name') build the expression. Used with .select(), .with_columns(), .filter(), .group_by().agg().",
+      "key_facts": [
+        "pl.col(column_name) creates a column expression",
+        ".alias('new_name') renames the resulting column",
+        ".mean(), .sum(), .min(), .max(), .std(), .var() are aggregations",
+        "Arithmetic: pl.col('a') + pl.col('b'), pl.col('x') * 2",
+        "Comparison returns boolean expression: pl.col('age') > 30"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Compute mean of 'price' column with alias 'avg_price'.",
+          "solution_steps": [
+            "Use pl.col('price') to reference the column",
+            "Chain .mean() to compute the aggregation",
+            "Chain .alias('avg_price') to rename the result",
+            "Pass to df.select() to materialize"
+          ],
+          "final_answer": "result = df.select(pl.col('price').mean().alias('avg_price'))",
+          "key_insight": "Expressions compose: column ref → operation → alias → context."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pandas-style df['price'].mean() — Polars expressions are lazy.",
+        "DO NOT call .expr() — that method does not exist; expressions are created by pl.col() directly.",
+        "DO NOT call .to_scalar() on an aggregation — wrap in pl.DataFrame or use .select() which returns a 1-row DataFrame.",
+        "Expression must be used inside a context: select / with_columns / filter / group_by.agg."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_with_columns",
+        "polars_cast",
+        "polars_when_then_otherwise"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "pl.col",
+          ".alias",
+          ".mean()",
+          ".sum()"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_filter_expression",
+      "title": "DataFrame.filter (Row Filtering)",
+      "definition": "DataFrame.filter(predicate) returns rows where the boolean expression evaluates to True. The predicate is a Polars expression (typically comparison or logical combination).",
+      "key_facts": [
+        "Signature: df.filter(pl.col('age') > 30)",
+        "Combine with & (and), | (or), ~ (not): df.filter((pl.col('a') > 0) & (pl.col('b') < 10))",
+        "Works on both DataFrame and LazyFrame",
+        "Different from pandas df[df['x'] > 0]: polars uses .filter() method"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Filter rows where age > 30.",
+          "solution_steps": [
+            "Build predicate: pl.col('age') > 30",
+            "Pass to df.filter()"
+          ],
+          "final_answer": "result = df.filter(pl.col('age') > 30)",
+          "key_insight": "filter() takes a polars expression, not pandas boolean mask."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use df[df['x'] > 0] — that is pandas; Polars uses df.filter().",
+        "Combining conditions: use & / | with parentheses, NOT 'and' / 'or'."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          ".filter"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_filter_in_expression",
+      "title": "Conditional Aggregation via Expression.filter()",
+      "definition": "Polars supports conditional aggregation by chaining .filter(predicate) INSIDE an expression before the aggregation. This is different from DataFrame.filter() (row filter). Inside an expression, .filter() applies BEFORE the aggregation, so SUM/MEAN apply only to values where the predicate is true.",
+      "key_facts": [
+        "Syntax: pl.col('y').filter(pl.col('x') > 2).sum() — sum y where x > 2",
+        "Different from df.filter() (row-level): expression .filter() is conditional aggregation",
+        "Useful for computing 'sum of x where y > 0' without modifying input DataFrame",
+        "Can be combined: pl.col('y').filter(condition).mean().alias('cond_mean')",
+        "Pandas equivalent would be df[cond]['y'].sum() — Polars version is cleaner"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Sum 'y' but only for rows where 'x' > 2.",
+          "solution_steps": [
+            "Build expression: pl.col('y').filter(pl.col('x') > 2)",
+            "Chain .sum().alias('filtered_sum')",
+            "Pass to df.select"
+          ],
+          "final_answer": "result = df.select(\n    pl.col('y').filter(pl.col('x') > 2).sum().alias('filtered_sum')\n)",
+          "key_insight": "Filter inside expression = conditional aggregation, no need to pre-filter DataFrame."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT confuse Expression.filter() (conditional agg) with DataFrame.filter() (row filter).",
+        "DO NOT use df.query('x > 2')['y'].sum() — pandas style.",
+        "DO NOT do df.filter(cond).select(pl.col('y').sum()) — works but wastes a step."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_filter_expression"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "pl.col(...).filter(...)"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_group_by",
+      "title": "DataFrame.group_by (Aggregation)",
+      "definition": "DataFrame.group_by(*by, *, maintain_order=False).agg(*exprs) groups rows by one or more columns and applies aggregation expressions. Returns a new DataFrame with one row per group. Note: Polars 1.0+ uses `group_by` (with underscore), NOT `groupby` (pandas style).",
+      "key_facts": [
+        "Signature: df.group_by('col').agg(pl.col('x').sum().alias('total'))",
+        "Polars 1.0+ method name is group_by (snake_case with underscore)",
+        "Polars 0.x used .groupby() — renamed in 1.0",
+        "Pass multiple columns: df.group_by('a', 'b').agg(...)",
+        "Aggregations: .sum(), .mean(), .first(), .last(), .count(), .min(), .max()"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Group by 'group', sum 'value' as 'total'.",
+          "solution_steps": [
+            "Call df.group_by('group')",
+            "Chain .agg(pl.col('value').sum().alias('total'))"
+          ],
+          "final_answer": "result = df.group_by('group').agg(pl.col('value').sum().alias('total'))",
+          "key_insight": "group_by + agg is the standard aggregation pattern."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use df.groupby() (without underscore) — that is pandas/old Polars.",
+        "DO NOT forget .alias() — default name is the input column."
+      ],
+      "parent_id": null,
+      "children_ids": [
+        "polars_rolling_aggregation"
+      ],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_group_by_dynamic",
+        "polars_window_functions"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "df.group_by",
+          ".agg"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_group_by_dynamic",
+      "title": "DataFrame.group_by_dynamic (Time-Based Grouping)",
+      "definition": "DataFrame.group_by_dynamic(index_column, *, every, period=None, offset=None, closed='left', ...).agg(...) groups rows into time-based windows. The method name was RENAMED from groupby_dynamic in Polars 0.x to group_by_dynamic in Polars 1.0+.",
+      "key_facts": [
+        "Signature: df.group_by_dynamic('timestamp', every='1d').agg(...)",
+        "Polars 1.0+ method name is `group_by_dynamic` (was `groupby_dynamic` in 0.x)",
+        "every parameter: window size, e.g. '1d', '1h', '30m', '1mo'",
+        "period parameter: optional, lookback window if different from every",
+        "offset parameter: optional, shift window boundaries",
+        "The index column must be sorted by time (use df.sort('ts') first)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Group hourly data into daily buckets, sum 'value' per day.",
+          "solution_steps": [
+            "Sort df by timestamp first (required for dynamic grouping)",
+            "Call df.group_by_dynamic('timestamp', every='1d')",
+            "Aggregate: .agg(pl.col('value').sum().alias('total'))"
+          ],
+          "final_answer": "result = df.sort('timestamp').group_by_dynamic(\n    'timestamp', every='1d'\n).agg(pl.col('value').sum().alias('total'))",
+          "key_insight": "group_by_dynamic + every is the canonical Polars 1.0+ time-bucketing pattern."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use .groupby_dynamic() — that is the deprecated 0.x name.",
+        "DO NOT use .groupby_rolling() — that is also a deprecated 0.x name; Polars 1.0+ uses .rolling() (different semantics) or group_by_dynamic.",
+        "DO NOT use pandas .resample() — that is pandas API.",
+        "Unsorted timestamp column causes incorrect grouping; sort first."
+      ],
+      "parent_id": null,
+      "children_ids": [
+        "polars_dynamic_advanced"
+      ],
+      "related_concepts": [
+        "polars_group_by",
+        "polars_expression_api"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "df.group_by_dynamic"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_join",
+      "title": "DataFrame.join",
+      "definition": "DataFrame.join(other, on=None, *, how='inner', left_on=None, right_on=None, suffix='_right', validate=None) joins two DataFrames on key column(s). Supports multiple join strategies and optional validation of cardinality.",
+      "key_facts": [
+        "Signature: df_a.join(df_b, on='id', how='left'/'inner'/'outer'/'cross', ...)",
+        "on parameter for single key; left_on / right_on for different key names",
+        "how parameter: 'inner' (default), 'left', 'outer', 'cross', 'semi', 'anti'",
+        "suffix parameter to disambiguate duplicate columns (default '_right')",
+        "validate parameter (Polars 1.0+) for cardinality assertion"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Left join df_a and df_b on 'id' with 1:1 validation.",
+          "solution_steps": [
+            "Call df_a.join(df_b, on='id', how='left')",
+            "Add validate='1:1' to enforce one-to-one mapping"
+          ],
+          "final_answer": "result = df_a.join(df_b, on='id', how='left', validate='1:1')",
+          "key_insight": "Polars 1.0+ join with validate ensures cardinality at join time."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pd.merge — that is pandas; use df.join.",
+        "Default how is 'inner' — explicitly specify 'left' when needed."
+      ],
+      "parent_id": null,
+      "children_ids": [
+        "polars_join_asof",
+        "polars_join_strategies"
+      ],
+      "related_concepts": [
+        "polars_validate_parameter"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "df.join"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_join_asof",
+      "title": "df.join_asof (As-Of / Temporal Join)",
+      "definition": "Polars 1.0+ df.join_asof is a time-series 'as-of' join: for each row in the left DataFrame, finds the MOST RECENT matching row in the right DataFrame at or before (or after) that row's index value. Used for trades-quotes matching, sensor-timestamp alignment, etc.",
+      "key_facts": [
+        "Signature: df_a.join_asof(df_b, on='time_col', strategy='backward')",
+        "strategy: 'backward' (most recent <=), 'forward' (next >=), 'nearest'",
+        "BOTH DataFrames must be SORTED by the asof column",
+        "tolerance parameter: max time delta (returns null if exceeded)",
+        "by parameter: additional exact-match columns (e.g., per-symbol)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Match trades to most recent quote (backward asof).",
+          "solution_steps": [
+            "Sort df_trades and df_quotes by 'timestamp'",
+            "Call df_trades.join_asof(df_quotes, on='timestamp', strategy='backward')"
+          ],
+          "final_answer": "result = df_trades.join_asof(\n    df_quotes, on='timestamp', strategy='backward'\n)",
+          "key_insight": "join_asof is essential for time-series alignment problems."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pd.merge_asof — Polars has native join_asof.",
+        "Failing to sort both DataFrames by the asof column gives wrong results.",
+        "Default strategy is 'backward' — be explicit when needing 'forward' or 'nearest'."
+      ],
+      "parent_id": "polars_join",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_join",
+        "polars_join_strategies"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "join_asof",
+          "strategy='backward'"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_join_strategies",
+      "title": "Join Strategies (anti, semi, outer) + left_on/right_on",
+      "definition": "Polars 1.0+ supports rich join strategies via the `how` parameter: 'inner' (default), 'left', 'outer'/'full', 'cross', 'semi' (rows in A also in B), 'anti' (rows in A NOT in B). The left_on/right_on parameters allow joining DataFrames with DIFFERENT key column names.",
+      "key_facts": [
+        "how options: 'inner', 'left', 'outer'/'full', 'cross', 'semi', 'anti'",
+        "'anti' join: rows in left WITHOUT matching key in right (set difference)",
+        "'semi' join: rows in left WITH matching key (set intersection on keys only)",
+        "left_on / right_on: join on differently-named columns",
+        "Anti/semi joins do NOT bring right-side columns (only left)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Anti join to find rows in df_a NOT in df_b.",
+          "solution_steps": [
+            "Use df_a.join(df_b, on='id', how='anti')",
+            "Result has only df_a's columns; only rows missing from df_b"
+          ],
+          "final_answer": "result = df_a.join(df_b, on='id', how='anti')",
+          "key_insight": "Anti join replaces complex 'not in' filters."
+        },
+        {
+          "problem": "Join with differently-named key columns.",
+          "solution_steps": [
+            "df_users has 'user_id', df_orders has 'customer_id'",
+            "Use left_on='user_id', right_on='customer_id'"
+          ],
+          "final_answer": "result = df_users.join(\n    df_orders, left_on='user_id', right_on='customer_id', how='inner'\n)",
+          "key_insight": "left_on/right_on enable joins without renaming columns first."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use ~df['id'].isin(df_b['id']) for anti join — Polars has how='anti'.",
+        "DO NOT use pd.merge with indicator parameter — Polars uses 'anti'/'semi'.",
+        "Forgetting 'how' parameter defaults to 'inner' — be explicit."
+      ],
+      "parent_id": "polars_join",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_join",
+        "polars_validate_parameter"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "how='anti'",
+          "how='semi'",
+          "left_on=",
+          "right_on="
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_lag_lead",
+      "title": "Lag / Lead Operations (diff, shift)",
+      "definition": "Polars provides lag/lead via .diff() (current - previous) and .shift(n) (returns values from n rows back). Both produce a column with the same length, with leading nulls equal to abs(n).",
+      "key_facts": [
+        "pl.col(x).diff() — equivalent to pl.col(x) - pl.col(x).shift(1)",
+        "pl.col(x).shift(1) — value from previous row (lag-1)",
+        "pl.col(x).shift(-1) — value from next row (lead-1)",
+        "First abs(n) values are null (no prior/next row exists)",
+        "Output dtype: same as input (or Int64 for diff on int)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Add 'diff' column (current - previous) using diff().",
+          "solution_steps": [
+            "Build expression: pl.col('x').diff().alias('diff')",
+            "Apply with with_columns"
+          ],
+          "final_answer": "result = df.with_columns(pl.col('x').diff().alias('diff'))",
+          "key_insight": "diff() is shorthand for shift(1) subtraction."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use df['x'].diff() — pandas style; Polars uses pl.col expression.",
+        "DO NOT manually compute pl.col('x') - pl.col('x').shift(1) when .diff() suffices.",
+        "First row will be null after diff — don't forget to fill_null if needed."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_with_columns"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          ".diff()",
+          ".shift()"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_lazy_optimization",
+      "title": "Lazy Query Optimization (explain, eager_to_lazy, predicate pushdown)",
+      "definition": "Polars 1.0+ LazyFrame provides query plan introspection and optimization. lf.explain() returns a textual query plan showing optimizations like predicate pushdown and projection pushdown. df.lazy() converts eager DataFrame to LazyFrame for further lazy chaining.",
+      "key_facts": [
+        "lf.explain() — returns query plan as string (shows pushdowns, optimizations)",
+        "df.lazy() — convert eager DataFrame to LazyFrame (for lazy chaining)",
+        "Predicate pushdown: filters move closer to scan (skip rows during IO)",
+        "Projection pushdown: only required columns are read",
+        "lf.show_graph() — visualize plan (requires graphviz)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Inspect query plan with explain.",
+          "solution_steps": [
+            "Build a LazyFrame with operations",
+            "Call lf.explain() and print/return"
+          ],
+          "final_answer": "lf = pl.LazyFrame({'x': range(100)}).filter(pl.col('x') > 50)\nresult = lf.explain()",
+          "key_insight": "explain() shows you what optimizations Polars will apply at collect time."
+        },
+        {
+          "problem": "Convert eager DataFrame to LazyFrame.",
+          "solution_steps": [
+            "Call df.lazy() to get a LazyFrame",
+            "Chain further lazy ops"
+          ],
+          "final_answer": "lf = df.lazy()",
+          "key_insight": "df.lazy() is the bridge from eager to lazy execution."
+        },
+        {
+          "problem": "Chained lazy operations.",
+          "solution_steps": [
+            "Multiple lazy ops can be chained before collect",
+            "Polars optimizes the whole plan together"
+          ],
+          "final_answer": "result = (\n    lf.filter(pl.col('x') > 100)\n    .select(pl.col('x').sum().alias('s'))\n    .collect()\n)",
+          "key_insight": "Chained lazy ops let Polars optimize across the whole pipeline."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT call .collect() between every operation — defeats lazy optimization.",
+        "DO NOT use pl.LazyFrame(df) — use df.lazy() (cleaner).",
+        "lf.explain() returns a string, not a DataFrame — print it to read."
+      ],
+      "parent_id": "polars_lazyframe",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_lazyframe",
+        "polars_collect"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "lf.explain",
+          "df.lazy"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_lazyframe",
+      "title": "Polars LazyFrame and Lazy Execution",
+      "definition": "A LazyFrame is Polars' deferred-execution counterpart to DataFrame. Operations on a LazyFrame build a query plan that is only executed when .collect() is called. This enables query optimization (predicate pushdown, projection pushdown) and out-of-memory streaming.",
+      "key_facts": [
+        "Create via pl.LazyFrame({...}) or pl.scan_*() functions",
+        "Operations like .filter, .select, .with_columns return a new LazyFrame",
+        "Execution is triggered by .collect() or .sink_*() methods",
+        "Polars 1.0+ provides explicit streaming engine via engine='streaming'",
+        "Eager DataFrame can be converted to LazyFrame via df.lazy()"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Read CSV lazily, filter age > 30, then collect.",
+          "solution_steps": [
+            "Use pl.scan_csv() to create a LazyFrame from CSV",
+            "Apply .filter(pl.col('age') > 30) — still lazy, no IO yet",
+            "Call .collect() to execute the query and get a DataFrame"
+          ],
+          "final_answer": "result = pl.scan_csv('people.csv').filter(pl.col('age') > 30).collect()",
+          "key_insight": "Lazy operations defer execution; collect() materializes the result."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT pass `lazy=True` to pl.read_csv — that parameter does not exist. Use pl.scan_csv() instead.",
+        "Calling .collect() on every operation defeats the purpose of lazy execution.",
+        "Polars 0.x methods like df.lazy().with_column() are renamed in 1.0+"
+      ],
+      "parent_id": null,
+      "children_ids": [
+        "polars_scan_csv",
+        "polars_scan_parquet",
+        "polars_sink_parquet",
+        "polars_collect",
+        "polars_scan_ndjson",
+        "polars_streaming_io",
+        "polars_lazy_optimization"
+      ],
+      "related_concepts": [
+        "polars_scan_csv",
+        "polars_scan_parquet",
+        "polars_collect",
+        "polars_sink_parquet"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "pl.LazyFrame",
+          "df.lazy",
+          "lf.collect"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_null_handling",
+      "title": "Null Handling Expressions (fill_null, is_null, is_not_null, drop_nulls)",
+      "definition": "Polars 1.0+ provides comprehensive null handling via expressions: fill_null(value) replaces nulls with a value; is_null() / is_not_null() are boolean predicates; drop_nulls() removes rows with any null.",
+      "key_facts": [
+        "pl.col(x).fill_null(value) — replace nulls with constant value or expression",
+        "pl.col(x).is_null() — returns boolean Series (True where null)",
+        "pl.col(x).is_not_null() — inverse of is_null()",
+        "df.drop_nulls() — remove rows with null in any column",
+        "df.drop_nulls(subset=['x']) — only check specific columns"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Fill null values in column 'x' with 0.",
+          "solution_steps": [
+            "Build expression: pl.col('x').fill_null(0)",
+            "Apply with with_columns"
+          ],
+          "final_answer": "result = df.with_columns(pl.col('x').fill_null(0))",
+          "key_insight": "fill_null is the Polars equivalent of pandas fillna."
+        },
+        {
+          "problem": "Filter rows where column 'x' is not null.",
+          "solution_steps": [
+            "Build predicate: pl.col('x').is_not_null()",
+            "Use df.filter()"
+          ],
+          "final_answer": "result = df.filter(pl.col('x').is_not_null())",
+          "key_insight": "is_not_null + filter is more explicit than dropna."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pandas-style df['x'].fillna(0) — Polars uses expressions.",
+        "DO NOT use .dropna() — Polars uses .drop_nulls().",
+        "DO NOT use .isnull() / .notna() — Polars uses .is_null() / .is_not_null()."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_filter_expression",
+        "polars_with_columns"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "fill_null",
+          "is_null",
+          "is_not_null",
+          "drop_nulls"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_reshape_ops",
+      "title": "Reshape Operations: pivot, unpivot, explode, concat strategies",
+      "definition": "Polars 1.0+ provides DataFrame reshape ops: pivot (long→wide), unpivot (wide→long, renamed from .melt in 0.x), explode (list cells → rows), and pl.concat with strategies ('vertical', 'vertical_relaxed', 'diagonal', 'diagonal_relaxed', 'horizontal') for combining DataFrames.",
+      "key_facts": [
+        "df.pivot(index, on, values) — Polars 1.0+ uses `on=` (not `columns=` from 0.x)",
+        "df.unpivot(index, on) — Polars 1.0+ name (was df.melt in 0.x)",
+        "df.explode('list_col') — one row per list element",
+        "pl.concat(dfs, how='vertical') — stack with same schema (strict)",
+        "pl.concat(dfs, how='vertical_relaxed') — auto coerce dtypes",
+        "pl.concat(dfs, how='diagonal_relaxed') — different cols, fill nulls + coerce"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Pivot DataFrame from long to wide.",
+          "solution_steps": [
+            "df has columns 'a' (index), 'b' (becomes columns), 'v' (values)",
+            "Use df.pivot(index='a', on='b', values='v')"
+          ],
+          "final_answer": "result = df.pivot(index='a', on='b', values='v')",
+          "key_insight": "Pivot uses `on=` for the column-pivoting parameter (1.0+ name)."
+        },
+        {
+          "problem": "Unpivot wide DataFrame to long.",
+          "solution_steps": [
+            "df has 'id', 'x', 'y' columns; unpivot 'x' and 'y'",
+            "Use df.unpivot(index='id', on=['x', 'y'])"
+          ],
+          "final_answer": "result = df.unpivot(index='id', on=['x', 'y'])",
+          "key_insight": "unpivot is the Polars 1.0+ name for what pandas calls melt."
+        },
+        {
+          "problem": "Concat with type coercion.",
+          "solution_steps": [
+            "df1 has int b; df2 has float b — incompatible for strict vertical",
+            "Use pl.concat([df1, df2], how='vertical_relaxed') to auto-coerce"
+          ],
+          "final_answer": "result = pl.concat([df1, df2], how='vertical_relaxed')",
+          "key_insight": "Use *_relaxed strategies when DataFrames have compatible-but-different dtypes."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use df.pivot(columns='b') — that's the 0.x parameter name; use `on=`.",
+        "DO NOT use df.melt() — Polars 1.0+ uses df.unpivot().",
+        "DO NOT use pd.concat — Polars uses pl.concat.",
+        "Strict 'vertical' concat fails with dtype mismatch — use *_relaxed."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_complex_types"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "df.pivot",
+          "df.unpivot",
+          "df.explode",
+          "pl.concat"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_rolling_aggregation",
+      "title": "df.rolling (Time-Aware Rolling Windows)",
+      "definition": "Polars 1.0+ df.rolling(index_column, period) provides time-aware rolling windows. Unlike group_by_dynamic (which produces NEW rows), rolling preserves the original row count and adds a rolling window aggregate per row. Polars 0.x called this groupby_rolling (deprecated).",
+      "key_facts": [
+        "Polars 1.0+: df.rolling(index_column='ts', period='2d')",
+        "Polars 0.x (deprecated): df.groupby_rolling(...)",
+        "index_column must be sorted (typically datetime or numeric)",
+        "period is the LOOKBACK window (e.g., '7d' = past 7 days)",
+        "Output has same row count as input (per-row aggregation)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Rolling sum of past 2 days for each row.",
+          "solution_steps": [
+            "df sorted by 'timestamp'",
+            "Call df.rolling(index_column='timestamp', period='2d')",
+            "Aggregate: .agg(pl.col('value').sum().alias('total'))"
+          ],
+          "final_answer": "result = df.rolling(\n    index_column='timestamp', period='2d'\n).agg(pl.col('value').sum().alias('total'))",
+          "key_insight": "df.rolling = time-aware rolling; row count preserved."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use groupby_rolling — that's deprecated 0.x.",
+        "DO NOT use pandas df.rolling().sum() — different semantics (fixed-size).",
+        "Polars rolling is TIME-aware (period like '2d'); pandas is COUNT-based.",
+        "Index column must be SORTED, otherwise results are incorrect."
+      ],
+      "parent_id": "polars_group_by",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_group_by_dynamic",
+        "polars_window_functions"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "df.rolling",
+          "period="
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_scan_csv",
+      "title": "pl.scan_csv (Lazy CSV Reading)",
+      "definition": "pl.scan_csv(source, *, has_header=True, separator=',', schema=None, ...) creates a LazyFrame from one or more CSV files without loading data into memory. Predicate and projection pushdown are applied during .collect().",
+      "key_facts": [
+        "Signature: pl.scan_csv(source: str | Path | list[str | Path], ...) -> LazyFrame",
+        "Returns LazyFrame (not DataFrame). Pair with .collect() to materialize.",
+        "Supports glob patterns: pl.scan_csv('data/*.csv')",
+        "schema parameter (dict) for explicit dtype hints",
+        "Eager alternative is pl.read_csv() which loads into memory immediately"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Lazily scan a CSV, filter rows, and collect.",
+          "solution_steps": [
+            "Call pl.scan_csv with the file path",
+            "Chain .filter(pl.col('age') > 30) — builds query plan",
+            "Call .collect() to execute and return a DataFrame"
+          ],
+          "final_answer": "result = pl.scan_csv('/tmp/people.csv').filter(pl.col('age') > 30).collect()",
+          "key_insight": "scan_csv defers IO; predicate pushdown skips rows without reading them."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT write pl.read_csv(path, lazy=True) — read_csv has no lazy parameter.",
+        "DO NOT use pd.read_csv from pandas; use polars' own scan_csv.",
+        "Forgetting .collect() returns a LazyFrame, not data."
+      ],
+      "parent_id": "polars_lazyframe",
+      "children_ids": [
+        "polars_scan_csv_advanced"
+      ],
+      "related_concepts": [
+        "polars_lazyframe",
+        "polars_collect",
+        "polars_filter_expression"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "pl.scan_csv"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_scan_csv_advanced",
+      "title": "pl.scan_csv Advanced Usage (schema, glob, n_rows)",
+      "definition": "Beyond basic lazy CSV reading, pl.scan_csv supports advanced parameters: explicit `schema` dict for dtype control (avoids inference cost and ensures correctness), GLOB patterns for multiple files (e.g., 'data/*.csv'), and `n_rows` to limit rows for development/testing.",
+      "key_facts": [
+        "schema parameter: dict[str, pl.DataType] for explicit dtype hints",
+        "Glob patterns work natively: pl.scan_csv('dir/*.csv')",
+        "n_rows: limit rows scanned (useful for sampling)",
+        "schema dict avoids dtype inference (faster, deterministic)",
+        "Glob auto-concatenates results from all matching files"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Scan CSV with explicit schema and glob.",
+          "solution_steps": [
+            "Pass schema={'name': pl.Utf8, 'age': pl.Int64} to scan_csv",
+            "Use 'data/*.csv' glob pattern as source",
+            "Collect to materialize"
+          ],
+          "final_answer": "result = pl.scan_csv(\n    'data/*.csv',\n    schema={'name': pl.Utf8, 'age': pl.Int64},\n).collect()",
+          "key_insight": "Schema + glob make scan_csv production-ready for typed multi-file pipelines."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use `dtype=` parameter — it doesn't exist; use `schema=` dict.",
+        "DO NOT manually loop with glob.glob() + concat; pl.scan_csv accepts globs directly.",
+        "schema dict must include ALL columns, not just some (or use `schema_overrides`)."
+      ],
+      "parent_id": "polars_scan_csv",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_scan_csv",
+        "polars_lazyframe"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "pl.scan_csv",
+          "schema=",
+          "glob pattern"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_scan_ndjson",
+      "title": "pl.scan_ndjson (Lazy JSON Lines Reading)",
+      "definition": "pl.scan_ndjson(source) lazily reads newline-delimited JSON (NDJSON / JSON Lines) files where each line is a separate JSON object. This is the common format for log files, event streams, and big-data exports. Different from pl.read_json (which reads a single JSON array).",
+      "key_facts": [
+        "Signature: pl.scan_ndjson(source: str | Path | list) -> LazyFrame",
+        "Each line in source file must be a complete JSON object",
+        "Auto-infers schema from first rows",
+        "Eager alternative: pl.read_ndjson",
+        "Different from pl.read_json (JSON array format)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Lazily scan JSON Lines file.",
+          "solution_steps": [
+            "Call pl.scan_ndjson with the .ndjson or .jsonl file path",
+            "Apply lazy operations (filter, select)",
+            "Call .collect()"
+          ],
+          "final_answer": "result = pl.scan_ndjson('events.ndjson').collect()",
+          "key_insight": "scan_ndjson is the streaming counterpart for JSON Lines / NDJSON format."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pl.read_json — that is for JSON arrays, not NDJSON.",
+        "DO NOT use pl.scan_json (doesn't exist) — only pl.scan_ndjson.",
+        "DO NOT manually json.loads each line; pl.scan_ndjson handles it."
+      ],
+      "parent_id": "polars_lazyframe",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_lazyframe",
+        "polars_collect"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "pl.scan_ndjson"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_scan_parquet",
+      "title": "pl.scan_parquet (Lazy Parquet Reading)",
+      "definition": "pl.scan_parquet(source, *, n_rows=None, ...) creates a LazyFrame from Parquet file(s) without loading data. Supports column pruning and row-group level filtering via predicate pushdown.",
+      "key_facts": [
+        "Signature: pl.scan_parquet(source: str | Path | list, ...) -> LazyFrame",
+        "Use .select('col1', 'col2') to leverage column projection pushdown",
+        "Eager alternative is pl.read_parquet()",
+        "Supports multiple files: pl.scan_parquet(['a.parquet', 'b.parquet'])"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Lazily scan parquet, select only 'name' column.",
+          "solution_steps": [
+            "Call pl.scan_parquet with the file path",
+            "Chain .select('name') — only this column will be read",
+            "Call .collect() to materialize"
+          ],
+          "final_answer": "result = pl.scan_parquet('users.parquet').select('name').collect()",
+          "key_insight": "scan_parquet + select uses projection pushdown — IO skips other columns."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use pl.read_parquet for lazy reads.",
+        "Without .select() projection pushdown does not occur."
+      ],
+      "parent_id": "polars_lazyframe",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_lazyframe",
+        "polars_collect"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "pl.scan_parquet"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_sink_parquet",
+      "title": "lf.sink_parquet (Streaming Parquet Write)",
+      "definition": "LazyFrame.sink_parquet(path, *, compression='zstd', statistics=True, engine='streaming') writes a LazyFrame to a Parquet file in streaming mode without materializing the full result in memory. This is the Polars 1.0+ way to handle datasets larger than RAM.",
+      "key_facts": [
+        "Signature: lf.sink_parquet(path, *, statistics=True/False/'full', ...)",
+        "Operates on LazyFrame (lf), NOT eager DataFrame (df)",
+        "statistics parameter accepts True / False / 'full' / 'minimal' (1.0+)",
+        "Returns None (writes to disk as side effect)",
+        "Polars 1.0+ alternative: .collect(engine='streaming') (for in-memory result)",
+        "Eager DataFrame uses df.write_parquet() (DOES load into memory)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Stream a LazyFrame to parquet with full statistics.",
+          "solution_steps": [
+            "Start with a LazyFrame `lf` (from scan_csv, LazyFrame constructor, etc.)",
+            "Call lf.sink_parquet(path, statistics='full')",
+            "No need to call .collect() — sink does streaming write internally"
+          ],
+          "final_answer": "lf.sink_parquet('/tmp/output.parquet', statistics='full')",
+          "key_insight": "sink_parquet is the streaming write counterpart of scan_parquet."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT write `df.write_parquet(path, streaming=True)` — there is no such parameter on write_parquet (which is eager).",
+        "DO NOT call .collect() before .sink_parquet() — this defeats streaming.",
+        "sink_parquet is on LazyFrame; write_parquet is on DataFrame — they are NOT interchangeable.",
+        "DO NOT use df.to_parquet() — that is pandas API."
+      ],
+      "parent_id": "polars_lazyframe",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_lazyframe",
+        "polars_scan_parquet"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "lf.sink_parquet"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_streaming_io",
+      "title": "Polars 1.0+ Streaming I/O (sink_csv, collect engine='streaming')",
+      "definition": "Polars 1.0+ provides streaming execution for both writing (sink_csv, sink_parquet) and collecting larger-than-memory queries via engine='streaming'. The old Polars 0.x `streaming=True` parameter is replaced by `engine='streaming'`.",
+      "key_facts": [
+        "lf.sink_csv(path) writes LazyFrame to CSV in streaming mode",
+        "lf.collect(engine='streaming') runs the query out-of-core",
+        "Polars 1.0+ API: `engine='streaming'`, NOT `streaming=True` (0.x deprecated)",
+        "Streaming execution processes chunks instead of full materialization",
+        "Available engines: 'auto' (default), 'streaming', 'in-memory'"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Stream a LazyFrame to CSV (no memory load).",
+          "solution_steps": [
+            "Start with a LazyFrame",
+            "Call .sink_csv(path) — writes directly without collect"
+          ],
+          "final_answer": "lf.sink_csv('/tmp/output.csv')",
+          "key_insight": "sink_csv is the streaming CSV counterpart of sink_parquet."
+        },
+        {
+          "problem": "Collect a LazyFrame using streaming engine.",
+          "solution_steps": [
+            "Build LazyFrame with lazy operations",
+            "Call .collect(engine='streaming')"
+          ],
+          "final_answer": "result = lf.collect(engine='streaming')",
+          "key_insight": "engine='streaming' replaces the deprecated streaming=True parameter."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use `streaming=True` to collect() — that's the deprecated 0.x API.",
+        "DO NOT use df.write_csv() with `streaming=True` — that parameter doesn't exist.",
+        "Use lf.sink_csv() (LazyFrame method), not df.write_csv() (eager DataFrame)."
+      ],
+      "parent_id": "polars_lazyframe",
+      "children_ids": [],
+      "related_concepts": [
+        "polars_collect",
+        "polars_sink_parquet"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "sink_csv",
+          "engine='streaming'"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_string_namespace",
+      "title": "String Namespace (pl.col.str.*)",
+      "definition": "Polars 1.0+ provides string operations via the `.str` namespace on column expressions: contains (regex/literal), split, len_chars/len_bytes, replace, to_lowercase/to_uppercase, slice, strip, and more.",
+      "key_facts": [
+        "pl.col('s').str.contains(pattern) — regex by default; literal=True for literal match",
+        "pl.col('s').str.split(separator) — returns List[Utf8]",
+        "pl.col('s').str.len_chars() / .len_bytes() — character/byte count",
+        "pl.col('s').str.replace(pat, repl) — first occurrence replace",
+        "pl.col('s').str.to_lowercase() / .to_uppercase() — case conversion"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Add boolean 'has_a' column where 'name' starts with 'A'.",
+          "solution_steps": [
+            "Build expression: pl.col('name').str.contains('^A')",
+            "Chain .alias('has_a')",
+            "Apply with with_columns"
+          ],
+          "final_answer": "result = df.with_columns(pl.col('name').str.contains('^A').alias('has_a'))",
+          "key_insight": "str namespace methods chain naturally with other expression ops."
+        },
+        {
+          "problem": "Count words by splitting on space.",
+          "solution_steps": [
+            "Use pl.col('text').str.split(' ').list.len() to count list items",
+            "Apply with with_columns"
+          ],
+          "final_answer": "result = df.with_columns(\n    pl.col('text').str.split(' ').list.len().cast(pl.Int64).alias('word_count')\n)",
+          "key_insight": "str.split + list.len combines namespaces for word counting."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use df['s'].str.contains() — pandas style; Polars uses pl.col.",
+        "DO NOT use .str.len() — ambiguous; use .str.len_chars() or .str.len_bytes().",
+        "Default contains uses REGEX; use literal=True for literal substring match."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_complex_types"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          ".str.contains",
+          ".str.split",
+          ".str.len_chars"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_validate_parameter",
+      "title": "Join validate Parameter (Polars 1.0+ Strict '1:1' Format)",
+      "definition": "The validate parameter on .join() enforces cardinality constraints at join time. In Polars 1.0+, the canonical accepted values use the STRICT FORMAT '1:1', '1:m', 'm:1', 'm:m' (with a colon separator). These are different from pandas' 'one_to_one' / 'one_to_many' format.",
+      "key_facts": [
+        "Polars 1.0+ canonical format: '1:1', '1:m', 'm:1', 'm:m' (colon)",
+        "Pandas uses 'one_to_one', 'one_to_many', etc. — DIFFERENT format",
+        "If validation fails, Polars raises ComputeError",
+        "validate=None (default) means no validation"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Enforce 1-to-1 join validation on df_a and df_b.",
+          "solution_steps": [
+            "Add validate='1:1' to .join() call (note: COLON, NOT hyphen/underscore)",
+            "Raises if either side has duplicate keys"
+          ],
+          "final_answer": "result = df_a.join(df_b, on='id', how='left', validate='1:1')",
+          "key_insight": "Polars 1.0+ uses '1:1' format; pandas-style 'one_to_one' is NOT canonical here."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT write validate='one_to_one' — that is pandas format.",
+        "DO NOT write validate='one-to-one' — also not canonical Polars 1.0+.",
+        "DO NOT write validate='1-1' — must use COLON '1:1'.",
+        "The exact 3-character string '1:1' is the Polars 1.0+ standard."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_join"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "validate='1:1'"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_when_then_otherwise",
+      "title": "pl.when / .then / .otherwise (Conditional Expressions)",
+      "definition": "pl.when(condition).then(value_if_true).otherwise(value_if_false) builds a conditional expression for row-wise branching. Used inside .select() or .with_columns() to create derived columns.",
+      "key_facts": [
+        "Signature: pl.when(cond).then(expr).otherwise(expr)",
+        "Can chain multiple: pl.when(c1).then(v1).when(c2).then(v2).otherwise(v3)",
+        "Wrap literal values with pl.lit() for clarity",
+        "Add .alias('col_name') at the end to name the result"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Add a 'category' column: 'young' if age <= 30, else 'old'.",
+          "solution_steps": [
+            "Build condition: pl.col('age') <= 30",
+            "Wrap in pl.when().then(pl.lit('young')).otherwise(pl.lit('old'))",
+            "Add .alias('category') and pass to with_columns"
+          ],
+          "final_answer": "result = df.with_columns(\n    pl.when(pl.col('age') <= 30).then(pl.lit('young'))\n    .otherwise(pl.lit('old')).alias('category')\n)",
+          "key_insight": "when/then/otherwise is Polars' equivalent of np.where / pandas .apply."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use np.where() — that is numpy; use pl.when().then().otherwise().",
+        "DO NOT use df.apply() — slow and pandas-style; use Polars expressions.",
+        "Forgetting .alias() leaves a default unnamed column."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_with_columns"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          "pl.when",
+          ".then",
+          ".otherwise"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_window_functions",
+      "title": "Expression.over (Window Functions)",
+      "definition": "Expression.over(*group_cols) is Polars' window function: it computes an aggregation WITHIN each group but keeps the original row count (unlike group_by().agg() which collapses rows).",
+      "key_facts": [
+        "Signature: pl.col('x').mean().over('group') — mean of x per group",
+        "Each row keeps its own value but shows the group-level aggregation",
+        "Used inside .with_columns() or .select()",
+        "Different from .group_by('group').agg(...) which reduces row count"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Compute per-group mean of 'value', keeping original rows.",
+          "solution_steps": [
+            "Build expression: pl.col('value').mean().over('group')",
+            "Chain .alias('group_avg') to name the result",
+            "Use with_columns to add as new column"
+          ],
+          "final_answer": "result = df.with_columns(\n    pl.col('value').mean().over('group').alias('group_avg')\n)",
+          "key_insight": "over() is the SQL window function equivalent in Polars."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use df.groupby('group')['value'].transform('mean') — pandas style.",
+        "DO NOT use .group_by().agg() for window — that reduces rows."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_group_by"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          ".over"
+        ],
+        "library": "polars>=1.0"
+      }
+    },
+    {
+      "id": "polars_with_columns",
+      "title": "DataFrame.with_columns (Add or Modify Columns)",
+      "definition": "DataFrame.with_columns(*exprs, **named_exprs) returns a new DataFrame with one or more added or replaced columns. Each expression must produce a column (e.g., pl.col(...).some_op().alias('new_name')).",
+      "key_facts": [
+        "Signature: df.with_columns(*exprs) -> DataFrame",
+        "Accepts multiple expressions: df.with_columns(expr1, expr2)",
+        "Replaces a column if the alias matches an existing name",
+        "Preserves all other columns (vs .select which keeps only selected)"
+      ],
+      "worked_examples": [
+        {
+          "problem": "Add a 'doubled' column to df.",
+          "solution_steps": [
+            "Build expression: (pl.col('x') * 2).alias('doubled')",
+            "Pass to df.with_columns"
+          ],
+          "final_answer": "result = df.with_columns((pl.col('x') * 2).alias('doubled'))",
+          "key_insight": "with_columns is the canonical way to add/modify columns."
+        }
+      ],
+      "common_pitfalls": [
+        "DO NOT use df['new'] = ... — Polars DataFrames are immutable.",
+        "Forgetting .alias() means the new column overrides the source column."
+      ],
+      "parent_id": null,
+      "children_ids": [],
+      "related_concepts": [
+        "polars_expression_api",
+        "polars_cast",
+        "polars_when_then_otherwise"
+      ],
+      "confidence": 1.0,
+      "source": "polars_docs_v1.x",
+      "last_verified": null,
+      "domain_metadata": {
+        "api_names": [
+          ".with_columns"
+        ],
+        "library": "polars>=1.0"
+      }
+    }
+  ]
+}

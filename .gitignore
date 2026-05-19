@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+*.egg-info/
+.venv/
+venv/
+
+# Models (太大, 不 commit)
+models/
+*.safetensors
+*.bin
+*.gguf
+checkpoints/
+
+# Raw experiment data
+/tmp/
+predictions*.jsonl
+generated_patch*.diff
+retrieved*.json
+*.log
+logs/
+nohup.out
+results_*/
+
+# Polars 实验 50 题 raw outputs (太大, 仅 commit summary)
+polars_50_*.jsonl
+polars_pilot_*.jsonl
+
+# SWE-bench harness output
+logs/run_evaluation/
+
+# Caches
+.cache/
+*.pkl
+
+# OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Sensitive
+.env
+*.key
+api_keys/

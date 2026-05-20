@@ -240,7 +240,7 @@ def bar(): pass
             self.assertIn('function', types)
 
     def test_kn_fields_complete(self):
-        """KnowledgeNode 必需字段完整."""
+        """KnowledgeNode 必需字段完整 (Phase 4.3 Day 6 重构后)."""
         from knowledge_tree.ast_tree_builder import ASTTreeBuilder
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
@@ -258,12 +258,71 @@ def bar(): pass
             self.assertTrue(n.title)
             self.assertTrue(n.definition)
             self.assertGreater(len(n.key_facts), 0)
-            self.assertEqual(len(n.worked_examples), 1)
+            # Phase 4.3 Day 6: worked_examples 留空 (不再 schema misuse 装代码)
+            self.assertEqual(len(n.worked_examples), 0)
+            # source_code: 完整 body (含 def 行 + docstring + body)
+            self.assertIsNotNone(n.source_code)
+            self.assertIn("def my_func", n.source_code)
+            self.assertIn("return x + y", n.source_code)
             # domain_metadata
             self.assertEqual(n.domain_metadata['type'], 'function')
             self.assertEqual(n.domain_metadata['qualified_name'], 'my_func')
             self.assertIn('start_line', n.domain_metadata)
             self.assertIn('end_line', n.domain_metadata)
+
+    def test_path_prefix_when_building_subdir(self):
+        """Phase 4.3 Day 6: 当 build 子目录 (e.g. repo/django/), 加 path_prefix
+        使 metadata 含完整 path from repo root."""
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            # 模拟 django: repo/django/db/models/sql/compiler.py
+            repo = Path(tmp) / "repo"
+            subdir = repo / "django"
+            (subdir / "db" / "models" / "sql").mkdir(parents=True)
+            self._write_file('''def get_order_by(self):
+    """Return order by."""
+    return self.parts.search(sql).group(1)
+''', subdir / "db" / "models" / "sql" / "compiler.py")
+            
+            # Build 子目录 + path_prefix='django'
+            builder = ASTTreeBuilder(path_prefix='django')
+            nodes = builder.build_from_repo(str(subdir))
+            
+            self.assertEqual(len(nodes), 1)
+            n = nodes[0]
+            # 关键: file metadata 应含 'django/' 前缀
+            self.assertEqual(
+                n.domain_metadata['file'],
+                'django/db/models/sql/compiler.py',
+            )
+
+    def test_no_path_prefix_default(self):
+        """默认 (None): rel_path 不加 prefix, 行为同 Phase 4.3 Day 5."""
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            (repo / "subdir").mkdir(parents=True)
+            self._write_file('def f(): pass\n', repo / "subdir" / "m.py")
+            
+            builder = ASTTreeBuilder()  # default path_prefix=None
+            nodes = builder.build_from_repo(str(repo))
+            
+            self.assertEqual(len(nodes), 1)
+            n = nodes[0]
+            # file 是相对 repo_root 的 path, 无前缀
+            self.assertEqual(n.domain_metadata['file'], 'subdir/m.py')
+
+    def test_path_prefix_trailing_slash_normalized(self):
+        """path_prefix='django/' 或 '/django' 应被 normalize 为 'django'."""
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._write_file('def f(): pass\n', repo / "m.py")
+            
+            for prefix_input in ['django', 'django/', '/django', '/django/']:
+                builder = ASTTreeBuilder(path_prefix=prefix_input)
+                self.assertEqual(builder.path_prefix, 'django',
+                                 f"path_prefix={prefix_input!r} should normalize to 'django'")
 
     def test_property_setter_deleter_no_clash(self):
         """关键: @property/@setter/@deleter 同名导致 qualified_name 重复, 
@@ -322,7 +381,11 @@ def bar(): pass
         self.assertEqual(stats['total_files_parsed'], 0)
 
     def test_large_function_sub_chunking(self):
-        """超过 max_function_lines 的函数 inject 应被 truncate."""
+        """大 function: source_code 字段含完整 body, 不截 (Phase 4.3 Day 6).
+        
+        注: max_function_lines / max_inject_chars 仍影响 inject_body (旧字段 worked_examples 用),
+        但 worked_examples 现在留空, 所以这些参数对 source_code 无效.
+        """
         from knowledge_tree.ast_tree_builder import ASTTreeBuilder
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
@@ -339,9 +402,14 @@ def bar(): pass
             
             self.assertEqual(len(nodes), 1)
             n = nodes[0]
-            example = n.worked_examples[0].final_answer
-            # 应有 truncation marker
-            self.assertLess(len(example), 5000 + 100)  # 加点 buffer
+            # source_code: 应完整 (不被 max_inject_chars 截), 含末尾 return 0
+            self.assertIsNotNone(n.source_code)
+            self.assertIn("return 0", n.source_code)
+            # 含 mid 行 (line 100 附近, 是 1000 / 2500 / 5000 截断会切掉的位置)
+            self.assertIn("x100 = 100", n.source_code)
+            self.assertIn("x149 = 149", n.source_code)  # 倒数第二行
+            # worked_examples 空 (Day 6 重构)
+            self.assertEqual(len(n.worked_examples), 0)
 
 
 @unittest.skipIf(not TREE_SITTER_AVAILABLE, "tree-sitter not installed")

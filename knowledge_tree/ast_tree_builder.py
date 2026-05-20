@@ -289,6 +289,7 @@ class ASTTreeBuilder(TreeBuilder):
         ignore_patterns: Optional[list] = None,
         include_classes: bool = True,
         include_sub_functions: bool = True,
+        path_prefix: Optional[str] = None,
     ) -> None:
         """
         Args:
@@ -298,6 +299,10 @@ class ASTTreeBuilder(TreeBuilder):
             ignore_patterns: 忽略文件 patterns (默认: tests, .git, etc.)
             include_classes: 是否提取 class 节点
             include_sub_functions: 是否提取嵌套 function (e.g. polars.scan_csv 内的 with_column_names)
+            path_prefix: (Phase 4.3 Day 6) 当 build 子目录 (e.g. 'django') 时, 给 
+                relative path 前补 prefix, 使 domain_metadata['file'] 是 from repo root.
+                例: build repo/django/, path_prefix='django' → file='django/db/.../compiler.py'
+                None (默认): 不补 prefix, 当 build 是 repo root 时使用
         """
         self.config = config or BuilderConfig()
         self.max_function_lines = max_function_lines
@@ -305,6 +310,7 @@ class ASTTreeBuilder(TreeBuilder):
         self.ignore_patterns = ignore_patterns or DEFAULT_IGNORE_PATTERNS
         self.include_classes = include_classes
         self.include_sub_functions = include_sub_functions
+        self.path_prefix = path_prefix.strip('/') if path_prefix else None
         
         # Lazy load tree-sitter
         self._language = None
@@ -452,6 +458,10 @@ class ASTTreeBuilder(TreeBuilder):
         
         # Build KnowledgeNode
         rel_path = py_file.relative_to(repo_root)
+        # Phase 4.3 Day 6: 应用 path_prefix (当 build 子目录时, 让 metadata 含完整 path-from-repo-root)
+        if self.path_prefix:
+            from pathlib import Path as _P
+            rel_path = _P(self.path_prefix) / rel_path
         file_id = self._make_file_id(rel_path)
         
         nodes = []
@@ -546,14 +556,10 @@ class ASTTreeBuilder(TreeBuilder):
                 key_facts.append(f"Description: {first_para[:300]}")
         
         # worked_examples
-        # Phase 4.3 Day 3: 从 tests/ + 同 repo calling sites 提取
-        # 当前 MVP: 把 function body 作为示例 (truncated)
-        worked_examples = [WorkedExample(
-            problem=f"How to use {ext['qualified_name']}",
-            solution_steps=[f"See implementation in {rel_path}:{ext['start_line']}"],
-            final_answer=inject_body[:1000],  # Truncate for example
-            key_insight=f"Definition of {ext['qualified_name']} from {rel_path}",
-        )]
+        # Phase 4.3 Day 6 重构: source_code 字段直接装 body, worked_examples 留空
+        # (原 MVP: final_answer=inject_body[:1000] 是 schema misuse, 双重截断 + framing 错位)
+        # 后续 Stage 1.3d 用 worked_examples 装真正的"测试用例 / calling sites"
+        worked_examples = []
         
         # common_pitfalls: 空 (Phase 4.3 Stage 1.3d WriteBack 填充)
         common_pitfalls = []
@@ -590,6 +596,7 @@ class ASTTreeBuilder(TreeBuilder):
             related_concepts=[],
             domain_metadata=domain_metadata,
             source="ast",
+            source_code=body,  # Phase 4.3 Day 6: 完整 body, 不截 (sub_chunk/max_inject_chars 仅影响旧 inject_body)
         )
     
     def _sub_chunk_large_function(self, ext: dict, body: str) -> str:

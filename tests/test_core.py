@@ -156,6 +156,71 @@ class TestKnowledgeNode(unittest.TestCase):
         self.assertIn("### Worked Examples", text)
         self.assertIn("### Common Pitfalls", text)
 
+    # ========================================================================
+    # source_code 字段测试 (Phase 4.3 Day 6)
+    # ========================================================================
+
+    def test_source_code_default_none(self):
+        """source_code 默认 None, 不影响 inject."""
+        node = self._make_node()
+        self.assertIsNone(node.source_code)
+        inject = node.llm_inject_text()
+        self.assertNotIn("### Source Code", inject)
+
+    def test_source_code_in_llm_inject(self):
+        """source_code 渲染在 inject 末尾, 含 'Source Code' header + python fence."""
+        code_body = "def foo():\n    return self.ordering_parts.search(sql).group(1)"
+        node = self._make_node(source_code=code_body)
+        inject = node.llm_inject_text()
+        self.assertIn("### Source Code", inject)
+        self.assertIn("```python", inject)
+        self.assertIn("ordering_parts.search", inject)
+        # 渲染顺序: source_code 在最后
+        sc_pos = inject.find("### Source Code")
+        common_pos = inject.find("### Common Pitfalls")
+        if common_pos != -1:
+            self.assertGreater(sc_pos, common_pos,
+                               "source_code 应该在 Common Pitfalls 之后")
+
+    def test_source_code_not_in_bm25_index(self):
+        """用户决策: source_code 不进 BM25 (避免 token 稀释)."""
+        unique_code = "UNIQUE_CODE_TOKEN_QQQQ_RRRR\n    def helper(): pass"
+        node = self._make_node(
+            title="Some Method",
+            definition="Test method.",
+            source_code=unique_code,
+        )
+        bm25_text = node.bm25_index_text()
+        # title / definition 进索引
+        self.assertIn("Some Method", bm25_text)
+        self.assertIn("Test method", bm25_text)
+        # source_code 不进索引
+        self.assertNotIn("UNIQUE_CODE_TOKEN_QQQQ_RRRR", bm25_text)
+        self.assertNotIn("def helper", bm25_text)
+
+    def test_source_code_roundtrip(self):
+        """source_code 序列化往返."""
+        code = "def bar(x):\n    return x + 1"
+        node = self._make_node(source_code=code)
+        d = node.to_dict()
+        node2 = KnowledgeNode.from_dict(d)
+        self.assertEqual(node2.source_code, code)
+
+    def test_source_code_backward_compat_old_json(self):
+        """旧 JSON 不含 source_code 字段, 加载时应 default None."""
+        old_json = {
+            "id": "old_n",
+            "title": "Old Node",
+            "definition": "Pre-Day-6 node, no source_code field.",
+            # 注意: 没有 source_code 字段
+        }
+        node = KnowledgeNode.from_dict(old_json)
+        self.assertIsNone(node.source_code)
+        # llm_inject_text 仍正常工作
+        text = node.llm_inject_text()
+        self.assertIn("Old Node", text)
+        self.assertNotIn("### Source Code", text)
+
     def test_serialize_roundtrip_with_worked_examples(self):
         """T-3.7 + 工程: 含嵌套 dataclass 的序列化必须双向无损."""
         ex = WorkedExample(

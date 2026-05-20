@@ -142,6 +142,12 @@ class KnowledgeNode:
     # === v2 domain extension (领域特定, Adapter 写入) ===
     domain_metadata: dict[str, Any] = field(default_factory=dict)
 
+    # === v3 source code (Phase 4.3 Day 6, ASTTreeBuilder 写入) ===
+    # 完整源代码 body, 直接喂给 generator (避免 WorkedExample.final_answer 截断 framing 错位)
+    # bm25_index_text() 不含 source_code (避免 token 稀释)
+    # llm_inject_text() 渲染在最后一节, 标签 "### Source Code"
+    source_code: Optional[str] = None
+
     def __post_init__(self) -> None:
         """字段合法性检查."""
         if not self.id.strip():
@@ -203,6 +209,11 @@ class KnowledgeNode:
             sections.append("### Common Pitfalls")
             sections.extend(f"- {pit}" for pit in self.common_pitfalls)
 
+        # Phase 4.3 Day 6: source_code 放最后 (generator 看完元信息再看代码)
+        if self.source_code:
+            sections.append("### Source Code")
+            sections.append(f"```python\n{self.source_code}\n```")
+
         return "\n".join(sections)
 
     def to_dict(self) -> dict[str, Any]:
@@ -233,6 +244,7 @@ class KnowledgeNode:
             source=d.get("source", "manual"),
             last_verified=d.get("last_verified"),
             domain_metadata=dict(d.get("domain_metadata", {})),
+            source_code=d.get("source_code"),  # Phase 4.3 Day 6, 旧 JSON 默认 None
         )
 
 

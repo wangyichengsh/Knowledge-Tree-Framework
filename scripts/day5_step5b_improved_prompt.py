@@ -234,7 +234,7 @@ def main():
     parser.add_argument("--patches-dir", default="/tmp/swe-bench-day5")
     parser.add_argument("--difficulty", choices=['easy', 'medium', 'hard'],
                         help="如果 task_id 不在 candidates, 用此指定")
-    parser.add_argument("--max-new-tokens", type=int, default=4096)
+    parser.add_argument("--max-new-tokens", type=int, default=16384)
     parser.add_argument("--validate-with-repo", action="store_true",
                         help="尝试 git apply --check (需 repo 已 clone)")
     parser.add_argument("--verbose", action="store_true")
@@ -293,6 +293,7 @@ def main():
     r1 = make_r1_generator(max_new_tokens=args.max_new_tokens, verbose=args.verbose)
     t0 = time.time()
     response = r1(prompt)
+    print(response)
     gen_time = time.time() - t0
     print(f"  ✓ Generated in {gen_time:.1f}s")
     print(f"  Response size: {len(response)} chars")

@@ -894,3 +894,192 @@ def make_all_retrievers(
         "E_tree_only": TreeNavigationRetriever(tree, llm_callable),
         "F_irrelevant": IrrelevantRetriever(tree),
     }
+
+
+# ============================================================================
+# Phase 4.3 Day 8: GraphExpandedRetriever - 召回扩展 (same_class + call graph)
+# ============================================================================
+
+class GraphExpandedRetriever(Retriever):
+    """BM25 召回 seed, 然后无条件加入 same_class method + call neighbor.
+
+    动机 (Day 8b 实证):
+      - BM25 oracle 没进 top-3 时通常掉到 rank 30~7000 (top-k 增大无效)
+      - 但 7/12 题 oracle 与 top-k 同 class, 6/12 题 top-k 调用 oracle
+      - 召回扩展: 用 BM25 seed 的 same_class / call 关系把 oracle 拉进 candidate
+
+    流程:
+      1. BM25 取 seed (top-`seed_k`, 默认 3)
+      2. 对每个 seed, 无条件加入:
+         (a) same_class: 同 qualified_name 前缀 (ClassA.*) 的其他 method
+         (b) calls: seed.domain_metadata['calls'] 中的函数 (1-hop 调用)
+         (c) called_by: 调用 seed 的函数 (反向, 1-hop)
+      3. seed 在前 (BM25 score 序), 扩展邻居补后, 去重, 截断 top_k
+
+    注意:
+      - 扩展邻居无 BM25 score, 排在所有 seed 之后
+      - same_class 在大 class (50+ method) 时会爆炸, 用 max_expansion 限制
+      - 不解决 miss 题中 seed 本身错的情况 (无正确种子去长邻居)
+    """
+
+    def __init__(
+        self,
+        tree: KnowledgeTree,
+        seed_k: int = 3,
+        max_expansion: int = 20,
+        enable_same_class: bool = True,
+        enable_calls: bool = True,
+        enable_called_by: bool = True,
+        exclude_class_nodes: bool = True,
+    ) -> None:
+        super().__init__(tree)
+        self._bm25 = BM25Retriever(tree)
+        self.seed_k = seed_k
+        self.max_expansion = max_expansion
+        self.enable_same_class = enable_same_class
+        self.enable_calls = enable_calls
+        self.enable_called_by = enable_called_by
+        self.exclude_class_nodes = exclude_class_nodes
+        # 预建索引
+        self._build_indices()
+
+    @property
+    def name(self) -> str:
+        return "graph_expanded"
+
+    def _build_indices(self) -> None:
+        """建 class → methods, func_name → nodes, called_by 反向索引."""
+        self._class_to_nodes: dict[str, list[KnowledgeNode]] = {}
+        self._funcname_to_nodes: dict[str, list[KnowledgeNode]] = {}
+        self._called_by: dict[str, list[KnowledgeNode]] = {}  # func_name → 调用它的 nodes
+
+        for n in self.tree.list_all():
+            qn = n.domain_metadata.get('qualified_name', '') or ''
+            # class 索引
+            if '.' in qn:
+                cls = qn.rsplit('.', 1)[0]
+                self._class_to_nodes.setdefault(cls, []).append(n)
+            # func_name 索引
+            fname = qn.split('.')[-1] if qn else ''
+            if fname:
+                self._funcname_to_nodes.setdefault(fname, []).append(n)
+            # called_by 反向索引: n 调用的每个函数 → n
+            for callee in n.domain_metadata.get('calls', []):
+                self._called_by.setdefault(callee, []).append(n)
+
+    def _expand_seed(self, seed: KnowledgeNode) -> list[KnowledgeNode]:
+        """对单个 seed 返回扩展邻居 (不含 seed 自身)."""
+        neighbors: list[KnowledgeNode] = []
+        seen_ids = {seed.id}
+        qn = seed.domain_metadata.get('qualified_name', '') or ''
+        seed_type = seed.domain_metadata.get('type', '')
+
+        # (a-1) seed 是 class 节点 → 拉入该 class 的所有 method
+        #   关键修复 (Day 8b 实证): BM25 常把 class 节点排在 method 前 (class index text
+        #   聚合了所有 method 内容, 词频高). 但 oracle 总是 method 级. 必须从 class 节点
+        #   拉出其 method, 否则 oracle method 永远进不来.
+        if self.enable_same_class and seed_type == 'class' and qn:
+            for n in self._class_to_nodes.get(qn, []):
+                if n.id not in seen_ids:
+                    neighbors.append(n)
+                    seen_ids.add(n.id)
+
+        # (a-2) seed 是 method → 拉入同 class 的其他 method
+        if self.enable_same_class and '.' in qn:
+            cls = qn.rsplit('.', 1)[0]
+            for n in self._class_to_nodes.get(cls, []):
+                if n.id not in seen_ids:
+                    neighbors.append(n)
+                    seen_ids.add(n.id)
+            # 也拉入 class 节点本身的兄弟 method (若 seed.parent_class 存在)
+
+        # (b) calls (seed 调用的函数, 1-hop)
+        if self.enable_calls:
+            for callee in seed.domain_metadata.get('calls', []):
+                for n in self._funcname_to_nodes.get(callee, []):
+                    if n.id not in seen_ids:
+                        neighbors.append(n)
+                        seen_ids.add(n.id)
+
+        # (c) called_by (调用 seed 的函数, 1-hop 反向)
+        if self.enable_called_by:
+            seed_fname = qn.split('.')[-1] if qn else ''
+            for n in self._called_by.get(seed_fname, []):
+                if n.id not in seen_ids:
+                    neighbors.append(n)
+                    seen_ids.add(n.id)
+
+        return neighbors
+
+    def retrieve(self, query: str, top_k: int = 3) -> list[KnowledgeNode]:
+        self._validate_top_k(top_k)
+        # 1. BM25 seed (多取一些, 因为 class 节点会被过滤)
+        seeds = self._bm25.retrieve(query, top_k=self.seed_k)
+        if not seeds:
+            return []
+
+        # 2. 扩展邻居 (按 seed 顺序, 邻居补在 seed 之后)
+        ordered: list[KnowledgeNode] = []
+        seen_ids: set = set()
+        for s in seeds:
+            if s.id not in seen_ids:
+                ordered.append(s)
+                seen_ids.add(s.id)
+
+        expansion_count = 0
+        for s in seeds:
+            for nb in self._expand_seed(s):
+                if nb.id not in seen_ids and expansion_count < self.max_expansion:
+                    ordered.append(nb)
+                    seen_ids.add(nb.id)
+                    expansion_count += 1
+
+        # 3. 过滤 class 节点 (对 generation 无用 - R1 不能"改整个 class")
+        #    class 节点的价值是它的 same_class 扩展 (已在 step 2 拉出 method),
+        #    保留它会占 top_k 名额且喂给 R1 无意义.
+        if self.exclude_class_nodes:
+            result = [n for n in ordered if n.domain_metadata.get('type') != 'class']
+        else:
+            result = ordered
+
+        return result[:top_k]
+
+    def retrieve_with_provenance(
+        self, query: str, top_k: int = 10,
+    ) -> list[dict]:
+        """诊断版: 返回每个节点的来源 (seed / same_class / calls / called_by).
+
+        用于 Day 8 分析: 看 oracle 是通过哪种关系被拉进来的.
+        """
+        seeds = self._bm25.retrieve(query, top_k=self.seed_k)
+        seed_ids = {s.id for s in seeds}
+        result = []
+        seen_ids = set()
+
+        for s in seeds:
+            if s.id not in seen_ids:
+                result.append({'node': s, 'provenance': 'seed',
+                               'qualified_name': s.domain_metadata.get('qualified_name')})
+                seen_ids.add(s.id)
+
+        for s in seeds:
+            sqn = s.domain_metadata.get('qualified_name', '') or ''
+            scls = sqn.rsplit('.', 1)[0] if '.' in sqn else None
+            sfname = sqn.split('.')[-1] if sqn else ''
+            for nb in self._expand_seed(s):
+                if nb.id in seen_ids:
+                    continue
+                nbqn = nb.domain_metadata.get('qualified_name', '') or ''
+                # 判断 provenance
+                prov = []
+                if scls and '.' in nbqn and nbqn.rsplit('.', 1)[0] == scls:
+                    prov.append('same_class')
+                if nb.domain_metadata.get('qualified_name', '').split('.')[-1] in s.domain_metadata.get('calls', []):
+                    prov.append(f'calls(from {sfname})')
+                if sfname in nb.domain_metadata.get('calls', []):
+                    prov.append(f'called_by(of {sfname})')
+                result.append({'node': nb, 'provenance': '+'.join(prov) or 'expansion',
+                               'qualified_name': nbqn, 'seed': sqn})
+                seen_ids.add(nb.id)
+
+        return result[:top_k]

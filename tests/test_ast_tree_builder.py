@@ -459,5 +459,149 @@ def render_template(template, context):
             self.assertIn('authenticate', results[0].id)
 
 
+class TestMethodSourceCodeIndent(unittest.TestCase):
+    """Phase 4.3 Day 7: source_code 必须含完整 leading indent (mixed-indent bug 回归).
+
+    根因: tree-sitter node.start_byte 指向 def 关键字, 不含行首 indent.
+    导致 method source_code 是 mixed indent (def 行 0, body 行绝对位置),
+    破坏 anchor_diff 的 align_after indent delta 计算 → patch 添加行 indent 错.
+    修复: _node_text_with_indent 回退 start_byte 到行首.
+    """
+
+    def _write_file(self, content, path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+
+    def test_method_source_code_starts_with_def_indent(self):
+        """class 内 method 的 source_code 第一行 (def) 应含真实 indent."""
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._write_file('''class MyWidget:
+    def id_for_label(self, id_):
+        """Docstring."""
+        return id_
+''', repo / "w.py")
+            builder = ASTTreeBuilder()
+            nodes = builder.build_from_repo(str(repo))
+            method = [n for n in nodes if 'id_for_label' in n.id]
+            self.assertEqual(len(method), 1)
+            sc = method[0].source_code
+            # def 行应有 4-space indent (method 在 class 内)
+            self.assertTrue(sc.startswith('    def id_for_label'),
+                            f"source_code should start with indented def, got: {sc[:40]!r}")
+            # body 行应有 8-space indent (一致, 不是 mixed)
+            self.assertIn('\n        """Docstring."""', sc)
+            self.assertIn('\n        return id_', sc)
+
+    def test_uniform_dedent_yields_consistent_base(self):
+        """source_code 经 textwrap.dedent 应得到 uniform base (验证非 mixed indent)."""
+        import textwrap
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._write_file('''class A:
+    def method(self):
+        x = 1
+        return x
+''', repo / "m.py")
+            builder = ASTTreeBuilder()
+            nodes = builder.build_from_repo(str(repo))
+            method = [n for n in nodes if n.id.endswith('method')]
+            self.assertEqual(len(method), 1)
+            sc = method[0].source_code
+            # dedent 后第一行无前导空格 (说明原本是 uniform 4-indent, 非 mixed)
+            dedented = textwrap.dedent(sc)
+            self.assertTrue(dedented.startswith('def method'),
+                            f"dedent should yield clean def, got: {dedented[:40]!r}")
+
+    def test_top_level_function_no_indent(self):
+        """顶级 function (非 method) source_code 第一行无 indent."""
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._write_file('''def top_level(x):
+    return x + 1
+''', repo / "f.py")
+            builder = ASTTreeBuilder()
+            nodes = builder.build_from_repo(str(repo))
+            self.assertEqual(len(nodes), 1)
+            sc = nodes[0].source_code
+            self.assertTrue(sc.startswith('def top_level'),
+                            f"top-level fn should have no indent, got: {sc[:40]!r}")
+
+
+class TestCallExtraction(unittest.TestCase):
+    """Phase 4.3 Day 8: tree-sitter AST 精确 call 提取."""
+
+    def _write_file(self, content, path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+
+    def test_extract_direct_calls(self):
+        """foo() 直接调用被提取."""
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._write_file('''def caller():
+    helper()
+    compute_value()
+    return 1
+''', repo / "m.py")
+            builder = ASTTreeBuilder()
+            nodes = builder.build_from_repo(str(repo))
+            caller = [n for n in nodes if n.id.endswith('caller')][0]
+            calls = caller.domain_metadata.get('calls', [])
+            self.assertIn('helper', calls)
+            self.assertIn('compute_value', calls)
+
+    def test_extract_method_calls(self):
+        """self.bar() / obj.method() 取末段."""
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._write_file('''class A:
+    def caller(self):
+        self.helper()
+        self.data.process()
+        return 1
+''', repo / "m.py")
+            builder = ASTTreeBuilder()
+            nodes = builder.build_from_repo(str(repo))
+            caller = [n for n in nodes if 'caller' in n.id][0]
+            calls = caller.domain_metadata.get('calls', [])
+            self.assertIn('helper', calls)
+            self.assertIn('process', calls)
+
+    def test_no_calls_empty_list(self):
+        """无调用的函数 calls=[]."""
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._write_file('''def pure(x):
+    return x + 1
+''', repo / "m.py")
+            builder = ASTTreeBuilder()
+            nodes = builder.build_from_repo(str(repo))
+            calls = nodes[0].domain_metadata.get('calls', [])
+            self.assertEqual(calls, [])
+
+    def test_calls_deduplicated(self):
+        """重复调用同一函数只记一次."""
+        from knowledge_tree.ast_tree_builder import ASTTreeBuilder
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._write_file('''def caller():
+    helper()
+    helper()
+    helper()
+    return 1
+''', repo / "m.py")
+            builder = ASTTreeBuilder()
+            nodes = builder.build_from_repo(str(repo))
+            calls = nodes[0].domain_metadata.get('calls', [])
+            self.assertEqual(calls.count('helper'), 1)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

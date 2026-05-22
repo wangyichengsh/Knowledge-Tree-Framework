@@ -575,6 +575,16 @@ def main():
     # Pipeline params
     parser.add_argument("--top-k", type=int, default=3,
                         help="retrieve top-k (default 3)")
+    parser.add_argument("--retriever", choices=['bm25', 'graph_expanded'], default='bm25',
+                        help="检索器: bm25 (baseline) | graph_expanded (Day 8 召回扩展)")
+    parser.add_argument("--seed-k", type=int, default=3,
+                        help="graph_expanded 的 BM25 seed 数 (default 3)")
+    parser.add_argument("--max-expansion", type=int, default=20,
+                        help="graph_expanded 的最大扩展邻居数 (default 20)")
+    parser.add_argument("--localize", action="store_true",
+                        help="两阶段: 先召回 candidate-k 候选, LLM 选 top-k, 再生成 (Day 9)")
+    parser.add_argument("--candidate-k", type=int, default=15,
+                        help="localize 阶段召回的候选数 (default 15, 然后 LLM 选 top-k)")
     parser.add_argument("--retry", type=int, default=2,
                         help="generation retry 次数 (default 2)")
     parser.add_argument("--work-dir", default="/tmp/swe-bench-day7",
@@ -704,16 +714,56 @@ def main():
             n_nodes = step_build_ktf(task, repo_path, ktf_path, skip_if_exists=args.skip_build)
             task_result['ktf_nodes'] = n_nodes
             
-            # Step 3: BM25 retrieve
-            logger.info(f"  [step 3] BM25 retrieve top-{args.top_k}")
+            # Step 3: retrieve (若 localize 开启, 召回 candidate_k 个候选)
+            n_retrieve = args.candidate_k if args.localize else args.top_k
+            logger.info(f"  [step 3] retrieve ({args.retriever}) "
+                        f"{'candidate-k=' + str(n_retrieve) + ' (localize)' if args.localize else 'top-' + str(args.top_k)}")
             retrieved_path = task_dir / "retrieved.json"
             from knowledge_tree.storage import JSONStorage
             from knowledge_tree.core import KnowledgeTree
-            from knowledge_tree.retrievers import BM25Retriever
+            from knowledge_tree.retrievers import BM25Retriever, GraphExpandedRetriever
             storage = JSONStorage(str(ktf_path), create_if_missing=False)
             tree = KnowledgeTree(storage.list_all())
-            bm25 = BM25Retriever(tree)
-            retrieved_nodes = bm25.retrieve(task['problem_statement'], top_k=args.top_k)
+            if args.retriever == 'graph_expanded':
+                retriever = GraphExpandedRetriever(
+                    tree, seed_k=args.seed_k, max_expansion=args.max_expansion,
+                )
+                retrieved_nodes = retriever.retrieve(task['problem_statement'], top_k=n_retrieve)
+                try:
+                    prov = retriever.retrieve_with_provenance(task['problem_statement'], top_k=n_retrieve)
+                    (task_dir / "retrieve_provenance.json").write_text(json.dumps([
+                        {'qualified_name': p['qualified_name'], 'provenance': p['provenance']}
+                        for p in prov
+                    ], indent=2, ensure_ascii=False))
+                except Exception as e:
+                    logger.warning(f"  provenance dump failed: {e}")
+            else:
+                bm25 = BM25Retriever(tree)
+                retrieved_nodes = bm25.retrieve(task['problem_statement'], top_k=n_retrieve)
+
+            # Step 3.5: 两阶段定位 (Stage 1: LLM 从 candidate 选相关 function)
+            if args.localize and len(retrieved_nodes) > args.top_k:
+                from knowledge_tree.localizer import localize, reorder_by_localization
+                logger.info(f"  [step 3.5] localize: LLM 从 {len(retrieved_nodes)} 候选选 {args.top_k} 个")
+                loc_result = localize(
+                    task['problem_statement'], retrieved_nodes,
+                    model_callable, select_k=args.top_k,
+                )
+                logger.info(f"    selected: {loc_result.selected_ids}")
+                logger.info(f"    reasoning: {loc_result.reasoning[:120]}")
+                if loc_result.fell_back:
+                    logger.warning(f"    ⚠ localization fell back to top-{args.top_k}")
+                # 重排: 选中的在前, 其余补后 (anchor fallback 仍可用)
+                retrieved_nodes = reorder_by_localization(retrieved_nodes, loc_result)
+                # 保存 localization 诊断
+                (task_dir / "localization.json").write_text(json.dumps({
+                    'selected_ids': loc_result.selected_ids,
+                    'reasoning': loc_result.reasoning,
+                    'n_candidates': loc_result.n_candidates,
+                    'fell_back': loc_result.fell_back,
+                }, indent=2, ensure_ascii=False))
+                # Stage 2 只用前 top_k 个 (选中的) 喂 generation
+                retrieved_nodes = retrieved_nodes[:args.top_k]
             
             # 写 retrieved.json (兼容性)
             retrieved_data = [{

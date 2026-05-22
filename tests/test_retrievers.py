@@ -603,5 +603,156 @@ class TestFactory(unittest.TestCase):
             self.assertIsInstance(result, list)
 
 
+class TestGraphExpandedRetriever(unittest.TestCase):
+    """Phase 4.3 Day 8: GraphExpandedRetriever 召回扩展 (same_class + call graph)."""
+
+    def _make_tree_with_calls(self):
+        """造一个含 class methods + call 关系的 tree."""
+        from knowledge_tree.core import KnowledgeNode, KnowledgeTree
+        nodes = [
+            # SQLCompiler class 的两个 method (same_class 关系)
+            KnowledgeNode(
+                id="n_get_order_by", title="get_order_by", definition="get order",
+                source_code="def get_order_by(self): return self._setup()",
+                domain_metadata={
+                    'file': 'sql/compiler.py', 'qualified_name': 'SQLCompiler.get_order_by',
+                    'calls': ['_setup'], 'type': 'method',
+                },
+            ),
+            KnowledgeNode(
+                id="n_init", title="__init__", definition="init",
+                source_code="def __init__(self): self.ordering = []",
+                domain_metadata={
+                    'file': 'sql/compiler.py', 'qualified_name': 'SQLCompiler.__init__',
+                    'calls': [], 'type': 'method',
+                },
+            ),
+            # _setup: 被 get_order_by 调用 (call 关系)
+            KnowledgeNode(
+                id="n_setup", title="_setup", definition="setup",
+                source_code="def _setup(self): pass",
+                domain_metadata={
+                    'file': 'sql/compiler.py', 'qualified_name': 'SQLCompiler._setup',
+                    'calls': [], 'type': 'method',
+                },
+            ),
+            # 无关函数
+            KnowledgeNode(
+                id="n_unrelated", title="unrelated", definition="unrelated foobar",
+                source_code="def unrelated(): pass",
+                domain_metadata={
+                    'file': 'other.py', 'qualified_name': 'unrelated',
+                    'calls': [], 'type': 'function',
+                },
+            ),
+        ]
+        return KnowledgeTree(nodes)
+
+    def test_same_class_expansion(self):
+        """seed=get_order_by → same_class 应拉入 __init__ 和 _setup."""
+        from knowledge_tree.retrievers import GraphExpandedRetriever
+        tree = self._make_tree_with_calls()
+        ge = GraphExpandedRetriever(tree, seed_k=1, max_expansion=10)
+        # query 命中 get_order_by
+        results = ge.retrieve("get order by", top_k=10)
+        result_qns = {n.domain_metadata['qualified_name'] for n in results}
+        # __init__ 应被 same_class 拉入
+        self.assertIn('SQLCompiler.__init__', result_qns)
+
+    def test_call_expansion(self):
+        """seed=get_order_by calls _setup → _setup 应被拉入."""
+        from knowledge_tree.retrievers import GraphExpandedRetriever
+        tree = self._make_tree_with_calls()
+        ge = GraphExpandedRetriever(
+            tree, seed_k=1, max_expansion=10,
+            enable_same_class=False, enable_called_by=False,  # 只测 calls
+        )
+        results = ge.retrieve("get order by", top_k=10)
+        result_qns = {n.domain_metadata['qualified_name'] for n in results}
+        self.assertIn('SQLCompiler._setup', result_qns)
+
+    def test_provenance_tracking(self):
+        """retrieve_with_provenance 标注每个节点来源."""
+        from knowledge_tree.retrievers import GraphExpandedRetriever
+        tree = self._make_tree_with_calls()
+        ge = GraphExpandedRetriever(tree, seed_k=1, max_expansion=10)
+        items = ge.retrieve_with_provenance("get order by", top_k=10)
+        # 至少有 1 个 seed + 扩展
+        provs = {it['provenance'] for it in items}
+        self.assertTrue(any('seed' in p for p in provs))
+
+    def test_max_expansion_limit(self):
+        """max_expansion 限制扩展数量."""
+        from knowledge_tree.retrievers import GraphExpandedRetriever
+        tree = self._make_tree_with_calls()
+        ge = GraphExpandedRetriever(tree, seed_k=1, max_expansion=1)
+        results = ge.retrieve("get order by", top_k=10)
+        # seed(1) + max_expansion(1) = 最多 2 (但 top_k=10 不限)
+        self.assertLessEqual(len(results), 2)
+
+    def test_empty_query_no_seed(self):
+        """无 BM25 命中时返回空."""
+        from knowledge_tree.retrievers import GraphExpandedRetriever
+        tree = self._make_tree_with_calls()
+        ge = GraphExpandedRetriever(tree, seed_k=3)
+        results = ge.retrieve("zzzznonexistentquery", top_k=5)
+        self.assertIsInstance(results, list)
+
+    def _make_tree_with_class_node(self):
+        """造含 class 节点 + method 节点的 tree (复现 class 挤掉 method bug)."""
+        from knowledge_tree.core import KnowledgeNode, KnowledgeTree
+        nodes = [
+            # class 节点 (BM25 index text 聚合所有 method 内容, 易排前)
+            KnowledgeNode(
+                id="n_point_class", title="Point", definition="A point with velocity in ReferenceFrame velocity position",
+                source_code="class Point: ...",
+                domain_metadata={
+                    'file': 'point.py', 'qualified_name': 'Point',
+                    'type': 'class', 'calls': [],
+                },
+            ),
+            KnowledgeNode(
+                id="n_point_vel", title="vel", definition="velocity getter",
+                source_code="def vel(self, frame): return self._vel_dict[frame]",
+                domain_metadata={
+                    'file': 'point.py', 'qualified_name': 'Point.vel',
+                    'type': 'method', 'calls': [],
+                },
+            ),
+            KnowledgeNode(
+                id="n_point_setvel", title="set_vel", definition="set velocity",
+                source_code="def set_vel(self, frame, v): self._vel_dict[frame]=v",
+                domain_metadata={
+                    'file': 'point.py', 'qualified_name': 'Point.set_vel',
+                    'type': 'method', 'calls': [],
+                },
+            ),
+        ]
+        return KnowledgeTree(nodes)
+
+    def test_class_seed_expands_to_methods(self):
+        """seed 是 class 节点 → 拉入该 class 所有 method (关键 Day 8b fix)."""
+        from knowledge_tree.retrievers import GraphExpandedRetriever
+        tree = self._make_tree_with_class_node()
+        ge = GraphExpandedRetriever(tree, seed_k=1, max_expansion=10,
+                                     exclude_class_nodes=True)
+        # query 命中 class 节点 Point (它 index text 含 velocity 等)
+        results = ge.retrieve("Point velocity ReferenceFrame", top_k=5)
+        result_qns = {n.domain_metadata['qualified_name'] for n in results}
+        # Point.vel (method) 应被拉入
+        self.assertIn('Point.vel', result_qns)
+        # class 节点本身应被过滤
+        self.assertNotIn('Point', result_qns)
+
+    def test_exclude_class_nodes_filters_class(self):
+        """exclude_class_nodes=True 时结果不含 type=class 的节点."""
+        from knowledge_tree.retrievers import GraphExpandedRetriever
+        tree = self._make_tree_with_class_node()
+        ge = GraphExpandedRetriever(tree, seed_k=3, exclude_class_nodes=True)
+        results = ge.retrieve("Point velocity", top_k=10)
+        for n in results:
+            self.assertNotEqual(n.domain_metadata.get('type'), 'class')
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

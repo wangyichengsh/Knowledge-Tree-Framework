@@ -90,12 +90,86 @@ def _node_text(node, source_bytes: bytes) -> str:
     return source_bytes[node.start_byte:node.end_byte].decode('utf-8', errors='replace')
 
 
+def _node_text_with_indent(node, source_bytes: bytes) -> str:
+    """提取 node 文本, 含该行的前导 indent (leading whitespace).
+    
+    tree-sitter 的 node.start_byte 指向 'def'/'class' 关键字, 不含行首 indent.
+    这导致 method body_text 是 mixed indent (def 行 0, body 行保留绝对位置).
+    
+    本函数回退 start_byte 到行首, 让提取的文本含完整 indent, 与源文件 byte-identical.
+    这对 anchor-based diff 至关重要: source_code 必须与真实文件 indent 一致,
+    否则 locate_anchor / align_after 计算的 indent delta 会错.
+    """
+    start = node.start_byte
+    # 回退到行首 (找前一个 \n)
+    line_start = source_bytes.rfind(b'\n', 0, start) + 1  # +1 跳过 \n 本身; 若没找到返回 0
+    # 检查 line_start 到 start 之间是否全是空白 (indent)
+    prefix = source_bytes[line_start:start]
+    if prefix.strip() == b'':
+        # 全是 indent, 包含进来
+        return source_bytes[line_start:node.end_byte].decode('utf-8', errors='replace')
+    # 否则 (同行有其他内容, 罕见) 不回退
+    return source_bytes[node.start_byte:node.end_byte].decode('utf-8', errors='replace')
+
+
 def _get_function_name(node) -> Optional[str]:
     """从 function_definition / class_definition node 取 name."""
     name_node = node.child_by_field_name('name')
     if name_node is None:
         return None
     return name_node.text.decode('utf-8', errors='replace')
+
+
+def _extract_calls(func_node, source_bytes: bytes) -> list[str]:
+    """从 function node 的 body 中精确提取被调用的函数/方法名 (tree-sitter AST).
+
+    Phase 4.3 Day 8: 精确 call graph 提取 (替代正则粗抽).
+
+    处理的调用形式:
+      - foo(...)              → 'foo'        (identifier call)
+      - self.bar(...)         → 'bar'        (attribute call, 取末段)
+      - obj.method(...)       → 'method'
+      - mod.submod.fn(...)    → 'fn'         (取末段 attribute)
+
+    不包含:
+      - 调用自身 (递归) 会被记录, 由 caller 决定是否过滤
+      - 内置函数 (len, range...) 也会记录, 由 caller 决定过滤
+
+    Returns:
+        去重的被调用名列表 (保持首次出现顺序)
+    """
+    called = []
+    seen = set()
+
+    def visit(n):
+        if n.type == 'call':
+            # call node 的 function child 是被调用的东西
+            fn_node = n.child_by_field_name('function')
+            if fn_node is not None:
+                name = None
+                if fn_node.type == 'identifier':
+                    # foo(...)
+                    name = fn_node.text.decode('utf-8', errors='replace')
+                elif fn_node.type == 'attribute':
+                    # self.bar(...) / obj.method(...) → 取 attribute 末段
+                    attr_node = fn_node.child_by_field_name('attribute')
+                    if attr_node is not None:
+                        name = attr_node.text.decode('utf-8', errors='replace')
+                if name and name not in seen:
+                    seen.add(name)
+                    called.append(name)
+        # 递归子节点
+        for child in n.children:
+            visit(child)
+
+    # 只遍历 body (不含 signature / decorator)
+    body_node = func_node.child_by_field_name('body')
+    if body_node is not None:
+        visit(body_node)
+    else:
+        visit(func_node)
+
+    return called
 
 
 def _get_parameters_text(node, source_bytes: bytes) -> str:
@@ -214,9 +288,10 @@ def extract_functions_from_tree(tree, source_bytes: bytes) -> list:
                 'signature': signature,
                 'parameters': params,
                 'docstring': docstring,
-                'body_text': _node_text(node, source_bytes),
+                'body_text': _node_text_with_indent(node, source_bytes),
                 'parent_class': parent_class,
                 'parent_function': parent_function,
+                'calls': _extract_calls(node, source_bytes),  # Phase 4.3 Day 8: 精确 call 提取
             })
             
             # Recurse into body to find nested
@@ -239,7 +314,7 @@ def extract_functions_from_tree(tree, source_bytes: bytes) -> list:
                 'signature': f"class {name}",
                 'parameters': '',
                 'docstring': docstring,
-                'body_text': _node_text(node, source_bytes),
+                'body_text': _node_text_with_indent(node, source_bytes),
                 'parent_class': parent_class,
                 'parent_function': None,
             })
@@ -581,7 +656,8 @@ class ASTTreeBuilder(TreeBuilder):
             'qualified_name': ext['qualified_name'],
             'parent_class': ext['parent_class'],
             'parent_function': ext['parent_function'],
-            # Phase 4.3 Day 3: 加 calls / called_by
+            # Phase 4.3 Day 8: 精确 call graph (tree-sitter AST 提取的被调用函数名)
+            'calls': ext.get('calls', []),
         }
         
         return KnowledgeNode(

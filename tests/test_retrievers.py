@@ -753,6 +753,61 @@ class TestGraphExpandedRetriever(unittest.TestCase):
         for n in results:
             self.assertNotEqual(n.domain_metadata.get('type'), 'class')
 
+    def _make_big_class_tree(self):
+        """造大 class: oracle method 与 query 相关但同 class 有很多无关 method.
+
+        复现 Day 10 bug: same_class 扩展无序时, 相关 oracle 被无关 method 挤掉.
+        """
+        from knowledge_tree.core import KnowledgeNode, KnowledgeTree
+        nodes = []
+        # seed: 与 query 高度匹配的 method
+        nodes.append(KnowledgeNode(
+            id="qs_union", title="union", definition="combine querysets union all",
+            source_code="def union(self): pass",
+            domain_metadata={'file': 'query.py', 'qualified_name': 'QuerySet.union',
+                             'type': 'method', 'calls': []},
+        ))
+        # oracle: 与 query 相关 (含 distinct 关键词), 同 class
+        nodes.append(KnowledgeNode(
+            id="qs_distinct", title="distinct", definition="return distinct queryset rows union",
+            source_code="def distinct(self): pass",
+            domain_metadata={'file': 'query.py', 'qualified_name': 'QuerySet.distinct',
+                             'type': 'method', 'calls': []},
+        ))
+        # 大量无关同 class method (撑满 max_expansion)
+        for i in range(30):
+            nodes.append(KnowledgeNode(
+                id=f"qs_misc{i}", title=f"misc{i}", definition=f"unrelated helper {i}",
+                source_code=f"def misc{i}(self): pass",
+                domain_metadata={'file': 'query.py', 'qualified_name': f'QuerySet.misc{i}',
+                                 'type': 'method', 'calls': []},
+            ))
+        return KnowledgeTree(nodes)
+
+    def test_rerank_pulls_relevant_oracle_in(self):
+        """query 重排让相关 oracle 排到扩展前部, 不被无关同 class method 挤掉."""
+        from knowledge_tree.retrievers import GraphExpandedRetriever
+        tree = self._make_big_class_tree()
+        # query 提 distinct (oracle) + union (seed)
+        query = "distinct queryset union returns duplicate rows"
+        # max_expansion 小, 若无序则 oracle 被挤掉; 重排后 oracle 应进
+        ge = GraphExpandedRetriever(tree, seed_k=1, max_expansion=5,
+                                     rerank_by_query=True)
+        results = ge.retrieve(query, top_k=6)
+        qns = {n.domain_metadata['qualified_name'] for n in results}
+        self.assertIn('QuerySet.distinct', qns)  # 相关 oracle 被重排拉进
+
+    def test_no_rerank_may_miss_oracle(self):
+        """对照: 不重排时, 大 class 的相关 oracle 可能被无关 method 挤掉."""
+        from knowledge_tree.retrievers import GraphExpandedRetriever
+        tree = self._make_big_class_tree()
+        query = "distinct queryset union returns duplicate rows"
+        ge = GraphExpandedRetriever(tree, seed_k=1, max_expansion=5,
+                                     rerank_by_query=False)
+        results = ge.retrieve(query, top_k=6)
+        # 不重排时 oracle 是否进取决于 KTF 顺序 (这里不强断言, 仅记录对照存在)
+        self.assertIsInstance(results, list)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

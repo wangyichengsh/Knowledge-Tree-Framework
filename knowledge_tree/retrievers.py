@@ -931,6 +931,7 @@ class GraphExpandedRetriever(Retriever):
         enable_calls: bool = True,
         enable_called_by: bool = True,
         exclude_class_nodes: bool = True,
+        rerank_by_query: bool = True,
     ) -> None:
         super().__init__(tree)
         self._bm25 = BM25Retriever(tree)
@@ -940,6 +941,7 @@ class GraphExpandedRetriever(Retriever):
         self.enable_calls = enable_calls
         self.enable_called_by = enable_called_by
         self.exclude_class_nodes = exclude_class_nodes
+        self.rerank_by_query = rerank_by_query
         # 预建索引
         self._build_indices()
 
@@ -967,21 +969,22 @@ class GraphExpandedRetriever(Retriever):
             for callee in n.domain_metadata.get('calls', []):
                 self._called_by.setdefault(callee, []).append(n)
 
-    def _expand_seed(self, seed: KnowledgeNode) -> list[KnowledgeNode]:
-        """对单个 seed 返回扩展邻居 (不含 seed 自身)."""
-        neighbors: list[KnowledgeNode] = []
+    def _expand_seed(self, seed: KnowledgeNode) -> list[tuple[KnowledgeNode, str]]:
+        """对单个 seed 返回扩展邻居 (不含 seed 自身), 带来源标记.
+
+        Returns: list of (node, relation) where relation ∈
+                 {'same_class', 'calls', 'called_by'}
+        """
+        neighbors: list[tuple[KnowledgeNode, str]] = []
         seen_ids = {seed.id}
         qn = seed.domain_metadata.get('qualified_name', '') or ''
         seed_type = seed.domain_metadata.get('type', '')
 
         # (a-1) seed 是 class 节点 → 拉入该 class 的所有 method
-        #   关键修复 (Day 8b 实证): BM25 常把 class 节点排在 method 前 (class index text
-        #   聚合了所有 method 内容, 词频高). 但 oracle 总是 method 级. 必须从 class 节点
-        #   拉出其 method, 否则 oracle method 永远进不来.
         if self.enable_same_class and seed_type == 'class' and qn:
             for n in self._class_to_nodes.get(qn, []):
                 if n.id not in seen_ids:
-                    neighbors.append(n)
+                    neighbors.append((n, 'same_class'))
                     seen_ids.add(n.id)
 
         # (a-2) seed 是 method → 拉入同 class 的其他 method
@@ -989,16 +992,15 @@ class GraphExpandedRetriever(Retriever):
             cls = qn.rsplit('.', 1)[0]
             for n in self._class_to_nodes.get(cls, []):
                 if n.id not in seen_ids:
-                    neighbors.append(n)
+                    neighbors.append((n, 'same_class'))
                     seen_ids.add(n.id)
-            # 也拉入 class 节点本身的兄弟 method (若 seed.parent_class 存在)
 
         # (b) calls (seed 调用的函数, 1-hop)
         if self.enable_calls:
             for callee in seed.domain_metadata.get('calls', []):
                 for n in self._funcname_to_nodes.get(callee, []):
                     if n.id not in seen_ids:
-                        neighbors.append(n)
+                        neighbors.append((n, 'calls'))
                         seen_ids.add(n.id)
 
         # (c) called_by (调用 seed 的函数, 1-hop 反向)
@@ -1006,37 +1008,50 @@ class GraphExpandedRetriever(Retriever):
             seed_fname = qn.split('.')[-1] if qn else ''
             for n in self._called_by.get(seed_fname, []):
                 if n.id not in seen_ids:
-                    neighbors.append(n)
+                    neighbors.append((n, 'called_by'))
                     seen_ids.add(n.id)
 
         return neighbors
 
     def retrieve(self, query: str, top_k: int = 3) -> list[KnowledgeNode]:
         self._validate_top_k(top_k)
-        # 1. BM25 seed (多取一些, 因为 class 节点会被过滤)
+        # 1. BM25 seed
         seeds = self._bm25.retrieve(query, top_k=self.seed_k)
         if not seeds:
             return []
 
-        # 2. 扩展邻居 (按 seed 顺序, 邻居补在 seed 之后)
-        ordered: list[KnowledgeNode] = []
-        seen_ids: set = set()
+        # 2. 收集扩展邻居 (带 relation 标记)
+        same_class_nbrs: list[KnowledgeNode] = []
+        call_nbrs: list[KnowledgeNode] = []
+        seen_ids: set = {s.id for s in seeds}
         for s in seeds:
-            if s.id not in seen_ids:
-                ordered.append(s)
-                seen_ids.add(s.id)
+            for nb, relation in self._expand_seed(s):
+                if nb.id in seen_ids:
+                    continue
+                seen_ids.add(nb.id)
+                if relation == 'same_class':
+                    same_class_nbrs.append(nb)
+                else:
+                    call_nbrs.append(nb)
 
-        expansion_count = 0
-        for s in seeds:
-            for nb in self._expand_seed(s):
-                if nb.id not in seen_ids and expansion_count < self.max_expansion:
-                    ordered.append(nb)
-                    seen_ids.add(nb.id)
-                    expansion_count += 1
+        # 3. 关键修复 (Day 10): same_class 邻居是强结构信号, oracle 常在此但 query
+        #    BM25 score 低 (problem_statement 用行为描述, 不含函数名, 如 distinct rank 32).
+        #    若用 query score 排, 低分 oracle 被同 class 高分 method 淹没.
+        #    因此 same_class 邻居【优先保全】(按 query score 排只为组内次序), call 邻居其后.
+        if self.rerank_by_query:
+            scores = self._bm25._get_scores(query)
+            if scores is not None:
+                id_to_score = {n.id: sc for n, sc in
+                               zip(self._bm25._nodes_indexed, scores)}
+                # same_class 组内按 query score 排 (但整组优先于 call)
+                same_class_nbrs.sort(key=lambda n: id_to_score.get(n.id, 0.0), reverse=True)
+                call_nbrs.sort(key=lambda n: id_to_score.get(n.id, 0.0), reverse=True)
 
-        # 3. 过滤 class 节点 (对 generation 无用 - R1 不能"改整个 class")
-        #    class 节点的价值是它的 same_class 扩展 (已在 step 2 拉出 method),
-        #    保留它会占 top_k 名额且喂给 R1 无意义.
+        # 4. 组合: seed → same_class (优先) → call, 整体截断 max_expansion
+        neighbors = (same_class_nbrs + call_nbrs)[:self.max_expansion]
+        ordered = list(seeds) + neighbors
+
+        # 5. 过滤 class 节点
         if self.exclude_class_nodes:
             result = [n for n in ordered if n.domain_metadata.get('type') != 'class']
         else:
@@ -1066,19 +1081,11 @@ class GraphExpandedRetriever(Retriever):
             sqn = s.domain_metadata.get('qualified_name', '') or ''
             scls = sqn.rsplit('.', 1)[0] if '.' in sqn else None
             sfname = sqn.split('.')[-1] if sqn else ''
-            for nb in self._expand_seed(s):
+            for nb, relation in self._expand_seed(s):
                 if nb.id in seen_ids:
                     continue
                 nbqn = nb.domain_metadata.get('qualified_name', '') or ''
-                # 判断 provenance
-                prov = []
-                if scls and '.' in nbqn and nbqn.rsplit('.', 1)[0] == scls:
-                    prov.append('same_class')
-                if nb.domain_metadata.get('qualified_name', '').split('.')[-1] in s.domain_metadata.get('calls', []):
-                    prov.append(f'calls(from {sfname})')
-                if sfname in nb.domain_metadata.get('calls', []):
-                    prov.append(f'called_by(of {sfname})')
-                result.append({'node': nb, 'provenance': '+'.join(prov) or 'expansion',
+                result.append({'node': nb, 'provenance': relation,
                                'qualified_name': nbqn, 'seed': sqn})
                 seen_ids.add(nb.id)
 

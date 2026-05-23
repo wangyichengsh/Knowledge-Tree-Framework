@@ -564,8 +564,18 @@ def main():
                             help="只选这些 repos (e.g. astropy/astropy django/django)")
     
     # Model
-    parser.add_argument("--model", choices=['r1', 'nemotron'], default='r1',
+    parser.add_argument("--model", choices=['r1', 'nemotron', 'claude_api'], default='r1',
                         help="generator 模型 (default: r1)")
+    parser.add_argument("--claude-model", default="claude-opus-4-7",
+                        help="claude_api 用的模型 (default: claude-opus-4-7, 当前旗舰). "
+                             "可选 claude-sonnet-4-6 (便宜) 等")
+    parser.add_argument("--claude-thinking-budget", type=int, default=0,
+                        help="Claude extended thinking budget tokens (0=禁用, >0 启用). "
+                             "仅对非-adaptive 模型有效 (Sonnet 4.6 等); Opus 4.7 忽略此参数")
+    parser.add_argument("--claude-effort", default=None,
+                        choices=['low', 'medium', 'high', 'xhigh'],
+                        help="Opus 4.7+ 的 effort 档位 (adaptive thinking 深度). "
+                             "仅对 adaptive 模型有效")
     parser.add_argument("--r1-lora-path", default="models/explorer-grpo-sanity/checkpoint-50",
                         help="R1 LoRA 路径")
     parser.add_argument("--nemotron-path", default="./models/nemotron-nano-9b-v2",
@@ -658,6 +668,17 @@ def main():
         model_callable = make_r1_generator(
             lora_path=args.r1_lora_path,
             max_new_tokens=args.max_new_tokens,
+            verbose=args.verbose,
+        )
+    elif args.model == 'claude_api':
+        from knowledge_tree.claude_api_client import ClaudeAPICallable
+        logger.info(f"[2] Using Claude API: {args.claude_model} "
+                    f"(thinking_budget={args.claude_thinking_budget}, effort={args.claude_effort})")
+        model_callable = ClaudeAPICallable(
+            model=args.claude_model,
+            max_tokens=args.max_new_tokens if args.max_new_tokens >= 4096 else 8192,
+            thinking_budget=args.claude_thinking_budget,
+            effort=args.claude_effort,
             verbose=args.verbose,
         )
     else:

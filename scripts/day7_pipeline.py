@@ -595,6 +595,11 @@ def main():
                         help="两阶段: 先召回 candidate-k 候选, LLM 选 top-k, 再生成 (Day 9)")
     parser.add_argument("--candidate-k", type=int, default=15,
                         help="localize 阶段召回的候选数 (default 15, 然后 LLM 选 top-k)")
+    parser.add_argument("--include-llm-summary", action="store_true",
+                        help="检索时把 domain_metadata['llm_summary'] 纳入 BM25 (Day 12 富化, "
+                             "攻 problem 行为描述 vs KTF 函数名的词汇鸿沟; 需先用 day12_enrich_summary 富化 KTF)")
+    parser.add_argument("--include-class-summary", action="store_true",
+                        help="检索时把 class_summary 纳入 BM25 (结构型解耦题, 通常救援第二轮用)")
     parser.add_argument("--retry", type=int, default=2,
                         help="generation retry 次数 (default 2)")
     parser.add_argument("--work-dir", default="/tmp/swe-bench-day7",
@@ -748,6 +753,8 @@ def main():
             if args.retriever == 'graph_expanded':
                 retriever = GraphExpandedRetriever(
                     tree, seed_k=args.seed_k, max_expansion=args.max_expansion,
+                    include_llm_summary=args.include_llm_summary,
+                    include_class_summary=args.include_class_summary,
                 )
                 retrieved_nodes = retriever.retrieve(task['problem_statement'], top_k=n_retrieve)
                 try:
@@ -759,7 +766,11 @@ def main():
                 except Exception as e:
                     logger.warning(f"  provenance dump failed: {e}")
             else:
-                bm25 = BM25Retriever(tree)
+                bm25 = BM25Retriever(
+                    tree,
+                    include_llm_summary=args.include_llm_summary,
+                    include_class_summary=args.include_class_summary,
+                )
                 retrieved_nodes = bm25.retrieve(task['problem_statement'], top_k=n_retrieve)
 
             # Step 3.5: 两阶段定位 (Stage 1: LLM 从 candidate 选相关 function)

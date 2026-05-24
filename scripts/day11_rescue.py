@@ -117,6 +117,11 @@ def main():
                         help="第二轮扩大候选 (default 30, 第一轮的 2x)")
     parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--max-expansion", type=int, default=20)
+    parser.add_argument("--include-llm-summary", action="store_true",
+                        help="第二轮检索纳入 llm_summary (Day 12 富化, 需先富化 KTF)")
+    parser.add_argument("--include-class-summary", action="store_true",
+                        help="第二轮检索纳入 class_summary — 救援尤其适用 (攻结构型解耦题: "
+                             "problem 描述缺失能力, oracle 在 class 某模式旁, 第一轮 method 匹配救不了)")
     parser.add_argument("--retry", type=int, default=2)
     parser.add_argument("--only-repo", default=None,
                         help="只救某个 repo (短名, 如 sympy). 验证救援用")
@@ -216,7 +221,9 @@ def main():
 
         # 第二轮 retrieve: 扩大 candidate
         retriever = GraphExpandedRetriever(tree, seed_k=args.seed_k,
-                                            max_expansion=args.max_expansion)
+                                            max_expansion=args.max_expansion,
+                                            include_llm_summary=args.include_llm_summary,
+                                            include_class_summary=args.include_class_summary)
         retrieved = retriever.retrieve(task['problem_statement'], top_k=args.candidate_k)
         print(f"  第二轮召回 {len(retrieved)} 候选 (candidate_k={args.candidate_k})")
 

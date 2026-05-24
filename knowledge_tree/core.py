@@ -161,23 +161,34 @@ class KnowledgeNode:
                 f"KnowledgeNode.confidence 必须 in [0.0, 1.0], 实际: {self.confidence}"
             )
 
-    def bm25_index_text(self) -> str:
+    def bm25_index_text(self, include_llm_summary: bool = False,
+                        include_class_summary: bool = False) -> str:
         """
         生成 BM25 索引文本.
 
         v3.4 v3 增量决策: worked_examples 不进 BM25 (用户 D-2 决策)
           理由: worked_examples 是长形式公式 + 步骤, 词频会稀释 BM25 score
-          风险评估: 召回率可能略降, 精度提升, 净效果 Phase 4.1 Week 3 实测验证
 
         进 BM25 索引的字段:
-          title (高权重隐含: BM25 题目通常重复，自然重)
-          definition (核心概念描述)
-          key_facts (公式 / 定理列表)
-          related_concepts (跨概念关联词)
+          title / definition / key_facts / related_concepts
+
+        v3.7 (Day 12) 富化开关:
+          include_llm_summary: 把 domain_metadata['llm_summary'] (method/function 行为
+            描述) 纳入索引. 攻"problem 行为描述 vs KTF 函数名"的词汇鸿沟. 默认关 (向后兼容).
+          include_class_summary: 把 domain_metadata['class_summary'] (class 级结构描述)
+            纳入. 用于第二轮救援匹配"结构型解耦题". 默认关.
         """
         parts: list[str] = [self.title, self.definition]
         parts.extend(self.key_facts)
         parts.extend(self.related_concepts)
+        if include_llm_summary:
+            s = (self.domain_metadata or {}).get('llm_summary', '')
+            if s:
+                parts.append(s)
+        if include_class_summary:
+            cs = (self.domain_metadata or {}).get('class_summary', '')
+            if cs:
+                parts.append(cs)
         return "\n".join(p for p in parts if p)
 
     def llm_inject_text(self) -> str:

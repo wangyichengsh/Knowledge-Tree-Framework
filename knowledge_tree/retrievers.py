@@ -268,8 +268,12 @@ class BM25Retriever(Retriever):
       若 BM25Retriever ≈ HybridRetriever, 则 hybrid 简化为 BM25.
     """
 
-    def __init__(self, tree: KnowledgeTree) -> None:
+    def __init__(self, tree: KnowledgeTree,
+                 include_llm_summary: bool = False,
+                 include_class_summary: bool = False) -> None:
         super().__init__(tree)
+        self.include_llm_summary = include_llm_summary
+        self.include_class_summary = include_class_summary
         self._build_index()
 
     def _build_index(self) -> None:
@@ -282,7 +286,12 @@ class BM25Retriever(Retriever):
             return
 
         # 用 KnowledgeNode.bm25_index_text (符合用户决策 D-2)
-        corpus_text = [n.bm25_index_text() for n in self._nodes_indexed]
+        # v3.7 Day 12: 可选纳入 llm_summary (攻词汇鸿沟) / class_summary (救援)
+        corpus_text = [
+            n.bm25_index_text(include_llm_summary=self.include_llm_summary,
+                              include_class_summary=self.include_class_summary)
+            for n in self._nodes_indexed
+        ]
         self._tokenized_corpus = [simple_tokenize(t) for t in corpus_text]
 
         # 检查所有 doc 是否都至少有一个 token (BM25Okapi 对空 doc 处理可能不一致)
@@ -932,9 +941,12 @@ class GraphExpandedRetriever(Retriever):
         enable_called_by: bool = True,
         exclude_class_nodes: bool = True,
         rerank_by_query: bool = True,
+        include_llm_summary: bool = False,
+        include_class_summary: bool = False,
     ) -> None:
         super().__init__(tree)
-        self._bm25 = BM25Retriever(tree)
+        self._bm25 = BM25Retriever(tree, include_llm_summary=include_llm_summary,
+                                   include_class_summary=include_class_summary)
         self.seed_k = seed_k
         self.max_expansion = max_expansion
         self.enable_same_class = enable_same_class

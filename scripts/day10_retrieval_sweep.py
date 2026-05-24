@@ -125,10 +125,17 @@ def measure_func_hit(ktf_path: Path, task: dict, retriever_cfg: dict) -> dict:
         r = GraphExpandedRetriever(
             tree, seed_k=retriever_cfg['seed_k'],
             max_expansion=retriever_cfg['max_expansion'],
+            include_llm_summary=retriever_cfg.get('include_llm_summary', False),
+            include_class_summary=retriever_cfg.get('include_class_summary', False),
         )
         retrieved = r.retrieve(task['problem_statement'], top_k=top_k)
     else:
-        retrieved = BM25Retriever(tree).retrieve(task['problem_statement'], top_k=top_k)
+        r = BM25Retriever(
+            tree,
+            include_llm_summary=retriever_cfg.get('include_llm_summary', False),
+            include_class_summary=retriever_cfg.get('include_class_summary', False),
+        )
+        retrieved = r.retrieve(task['problem_statement'], top_k=top_k)
 
     # func_hit 判定: oracle function 在 retrieved 的 qualified_name 末段中
     func_rank = None
@@ -165,6 +172,10 @@ def main():
     parser.add_argument("--sweep-candidate-k", nargs="+", type=int, default=[10, 15, 20],
                         help="top_k 候选数 (无 localize 时即最终 top_k)")
     parser.add_argument("--sweep-max-expansion", nargs="+", type=int, default=[20])
+    parser.add_argument("--include-llm-summary", action="store_true",
+                        help="把 domain_metadata['llm_summary'] 纳入 BM25 (Day 12 富化)")
+    parser.add_argument("--include-class-summary", action="store_true",
+                        help="把 class_summary 纳入 BM25 (第二轮救援用)")
     parser.add_argument("--output", default="day10_sweep_results.json")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
@@ -202,7 +213,9 @@ def main():
     results = []
     for seed_k, cand_k, max_exp in sweep_combos:
         cfg = {'retriever': args.retriever, 'seed_k': seed_k,
-               'top_k': cand_k, 'max_expansion': max_exp}
+               'top_k': cand_k, 'max_expansion': max_exp,
+               'include_llm_summary': args.include_llm_summary,
+               'include_class_summary': args.include_class_summary}
         hit_counts = defaultdict(int)
         per_task = []
         for task in tasks:

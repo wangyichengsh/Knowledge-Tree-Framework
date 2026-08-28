@@ -18,6 +18,7 @@ On SWE-bench Lite, KTF + Claude Opus 4.7 in a **single-pass** pipeline (retrieve
 | Claude Sonnet 4.6 | 9/33 (27%) | |
 | **Claude Opus 4.7** | **16/33 (48%)** | func_hit→resolved 63% |
 | **Opus 4.7 + rescue** | **20/33 (61%)** | one feedback-driven retry round |
+| Pure KTF contribution (de-contaminated) | 10/33 (30%) | func_hit→resolved only |
 
 The **func_hit→resolved** metric (oracle function was retrieved *and* the patch resolved) is used to separate genuine framework contribution from the model's memorization of well-known open-source issues (data contamination).
 

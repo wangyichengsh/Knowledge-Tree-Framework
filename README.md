@@ -20,7 +20,6 @@ On SWE-bench Lite, KTF + Claude Opus 4.7 in a **single-pass** pipeline (retrieve
 | Claude Sonnet 4.6 | 9/33 (27%) | |
 | **Claude Opus 4.7** | **16/33 (48%)** | func_hit→resolved 63% |
 | **Opus 4.7 + rescue** | **20/33 (61%)** | one feedback-driven retry round |
-| Pure KTF contribution (de-contaminated) | 10/33 (30%) | func_hit→resolved only |
 
 The **func_hit→resolved** metric (oracle function was retrieved *and* the patch resolved) is used to separate genuine framework contribution from the model's memorization of well-known open-source issues (data contamination) — see framework T-3.18.
 
@@ -189,18 +188,12 @@ pip install -e .
 python -m pytest tests/            # 317 tests
 ```
 
-## Documents
-
-- [`docs/intelligence_framework_v3_7.md`](docs/intelligence_framework_v3_7.md) — Core findings, SEALED triples, PROTO-7
-- [`docs/agi_engineering_architecture_v1_14.md`](docs/agi_engineering_architecture_v1_14.md) — Engineering details, best params, file inventory
-- [`docs/SESSION_HANDOFF.md`](docs/SESSION_HANDOFF.md) — For continuing across LLM sessions
 
 ## Phase Progress
 
 - ✅ Phase 4.1 (Mathematics): capability-ceiling triage
 - ✅ Phase 4.2 (Polars code generation): 50 tasks, paired-CI significant uplift
 - ✅ Phase 4.3 (SWE-bench Lite): full pipeline — three-model comparison (1→9→16), retrieval optimization (func_hit 33%→58%), rescue mechanism (48%→61%), summary-enrichment mechanism validated
-- 🔜 Next: isomorphism-driven capability lift; value-alignment KTF ("can a seed grow a value system?")
 
 ## Hardware / Stack
 
@@ -208,6 +201,3 @@ python -m pytest tests/            # 317 tests
 - Models: R1-Distill-Qwen-14B (4-bit + LoRA), Nemotron-Nano-9B-v2 (4-bit), Claude API (Sonnet 4.6 / Opus 4.7)
 - Frameworks: PyTorch, transformers, tree-sitter 0.25, swebench 4.1.0
 
-## License
-
-See `LICENSE`.

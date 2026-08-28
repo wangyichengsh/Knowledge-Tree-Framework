@@ -187,12 +187,6 @@ python -m pytest tests/            # 317 tests
 ```
 
 
-## Phase Progress
-
-- ✅ Phase 4.1 (Mathematics): capability-ceiling triage
-- ✅ Phase 4.2 (Polars code generation): 50 tasks, paired-CI significant uplift
-- ✅ Phase 4.3 (SWE-bench Lite): full pipeline — three-model comparison (1→9→16), retrieval optimization (func_hit 33%→58%), rescue mechanism (48%→61%), summary-enrichment mechanism validated
-
 ## Hardware / Stack
 
 - Tested: NVIDIA RTX 5090 32GB, Ubuntu 24

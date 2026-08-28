@@ -2,8 +2,6 @@
 
 > Domain-agnostic knowledge tree for enhancing an LLM's capability ceiling via structured, graph-expanded RAG — applied end-to-end to SWE-bench patch generation.
 
-**Status:** Research-in-progress. Phase 4.3 (SWE-bench Lite) complete through Day 12; summary-enrichment mechanism validated, full-scale enrichment pending a cheaper local model.
-
 ---
 
 ## What is this?
